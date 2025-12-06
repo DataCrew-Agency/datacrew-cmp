@@ -132,17 +132,11 @@ ___TEMPLATE_PARAMETERS___
     "subParams": [
       {
         "type": "TEXT",
-        "name": "cookieName",
-        "displayName": "Cookie Name",
-        "simpleValueType": true,
-        "defaultValue": "consentMode"
-      },
-      {
-        "type": "TEXT",
         "name": "cookieDomain",
         "displayName": "Cookie Domain",
         "simpleValueType": true,
-        "defaultValue": ""
+        "defaultValue": "",
+        "help": "Leave empty for current domain. Use .example.com for all subdomains."
       },
       {
         "type": "TEXT",
@@ -254,7 +248,6 @@ const JSON = require('JSON');
 const makeNumber = require('makeNumber');
 const gtagSet = require('gtagSet');
 const setInWindow = require('setInWindow');
-const callInWindow = require('callInWindow');
 const injectScript = require('injectScript');
 
 var colorMode = data.colorMode || 'gradient';
@@ -264,7 +257,6 @@ var bannerPosition = data.bannerPosition || 'center';
 var showOverlay = data.showOverlay !== false;
 var primaryButtonClass = data.primaryButtonClass || '';
 var secondaryButtonClass = data.secondaryButtonClass || '';
-var cookieName = data.cookieName || 'consentMode';
 var cookieDomain = data.cookieDomain || '';
 var cookieExpiryDays = makeNumber(data.cookieExpiryDays) || 365;
 var privacyPolicyUrl = data.privacyPolicyUrl || '/privacy-policy/';
@@ -295,6 +287,7 @@ setDefaultConsentState(defaultConsent);
 gtagSet('ads_data_redaction', true);
 gtagSet('url_passthrough', true);
 
+var cookieName = 'datacrew-consent';
 var existingConsent = getCookieValues(cookieName);
 if (existingConsent && existingConsent.length > 0) {
   var parsed = JSON.parse(existingConsent[0]);
@@ -312,7 +305,6 @@ if (existingConsent && existingConsent.length > 0) {
 }
 
 var config = {
-  cn: cookieName,
   cd: cookieDomain,
   ce: cookieExpiryDays,
   pp: privacyPolicyUrl,
@@ -825,3 +817,14 @@ scenarios: []
 ___NOTES___
 
 DataCrew CMP - Free Consent Management Platform
+https://github.com/DataCrew-Agency/datacrew-cmp
+
+API Methods:
+- DataCrewConsent.show() - Show consent banner
+- DataCrewConsent.show(true) - Show customization view
+- DataCrewConsent.hide() - Hide banner
+- DataCrewConsent.revisitConsent() - Reopen consent settings
+- DataCrewConsent.clearConsent() - Clear consent and show banner
+- DataCrewConsent.getConsent() - Get current consent state
+- DataCrewConsent.hasConsent() - Check if consent exists
+- DataCrewConsent.setLanguage('hu'|'en') - Change language
