@@ -195,13 +195,146 @@ ___TEMPLATE_PARAMETERS___
   {
     "type": "GROUP",
     "name": "consentDefaultsGroup",
-    "displayName": "Default Consent",
-    "groupStyle": "ZIPPY_CLOSED",
+    "displayName": "Default Consent State",
+    "groupStyle": "ZIPPY_OPEN",
     "subParams": [
+      {
+        "type": "SELECT",
+        "name": "defaultAdStorage",
+        "displayName": "ad_storage",
+        "macrosInSelect": false,
+        "selectItems": [
+          {
+            "value": "denied",
+            "displayValue": "denied"
+          },
+          {
+            "value": "granted",
+            "displayValue": "granted"
+          }
+        ],
+        "simpleValueType": true,
+        "defaultValue": "denied",
+        "help": "Controls storage for advertising purposes (e.g., cookies for ads)"
+      },
+      {
+        "type": "SELECT",
+        "name": "defaultAdUserData",
+        "displayName": "ad_user_data",
+        "macrosInSelect": false,
+        "selectItems": [
+          {
+            "value": "denied",
+            "displayValue": "denied"
+          },
+          {
+            "value": "granted",
+            "displayValue": "granted"
+          }
+        ],
+        "simpleValueType": true,
+        "defaultValue": "denied",
+        "help": "Controls sending user data to Google for advertising purposes"
+      },
+      {
+        "type": "SELECT",
+        "name": "defaultAdPersonalization",
+        "displayName": "ad_personalization",
+        "macrosInSelect": false,
+        "selectItems": [
+          {
+            "value": "denied",
+            "displayValue": "denied"
+          },
+          {
+            "value": "granted",
+            "displayValue": "granted"
+          }
+        ],
+        "simpleValueType": true,
+        "defaultValue": "denied",
+        "help": "Controls personalized advertising (remarketing)"
+      },
+      {
+        "type": "SELECT",
+        "name": "defaultAnalyticsStorage",
+        "displayName": "analytics_storage",
+        "macrosInSelect": false,
+        "selectItems": [
+          {
+            "value": "denied",
+            "displayValue": "denied"
+          },
+          {
+            "value": "granted",
+            "displayValue": "granted"
+          }
+        ],
+        "simpleValueType": true,
+        "defaultValue": "denied",
+        "help": "Controls storage for analytics purposes (e.g., visit duration)"
+      },
+      {
+        "type": "SELECT",
+        "name": "defaultFunctionalityStorage",
+        "displayName": "functionality_storage",
+        "macrosInSelect": false,
+        "selectItems": [
+          {
+            "value": "denied",
+            "displayValue": "denied"
+          },
+          {
+            "value": "granted",
+            "displayValue": "granted"
+          }
+        ],
+        "simpleValueType": true,
+        "defaultValue": "denied",
+        "help": "Controls storage for website functionality (e.g., language settings)"
+      },
+      {
+        "type": "SELECT",
+        "name": "defaultPersonalizationStorage",
+        "displayName": "personalization_storage",
+        "macrosInSelect": false,
+        "selectItems": [
+          {
+            "value": "denied",
+            "displayValue": "denied"
+          },
+          {
+            "value": "granted",
+            "displayValue": "granted"
+          }
+        ],
+        "simpleValueType": true,
+        "defaultValue": "denied",
+        "help": "Controls storage for personalization (e.g., video recommendations)"
+      },
+      {
+        "type": "SELECT",
+        "name": "defaultSecurityStorage",
+        "displayName": "security_storage",
+        "macrosInSelect": false,
+        "selectItems": [
+          {
+            "value": "denied",
+            "displayValue": "denied"
+          },
+          {
+            "value": "granted",
+            "displayValue": "granted"
+          }
+        ],
+        "simpleValueType": true,
+        "defaultValue": "granted",
+        "help": "Controls storage for security purposes (e.g., authentication, fraud prevention)"
+      },
       {
         "type": "CHECKBOX",
         "name": "waitForUpdate",
-        "checkboxText": "Wait for consent update",
+        "checkboxText": "Wait for consent update before firing tags",
         "simpleValueType": true,
         "defaultValue": true
       },
@@ -270,13 +403,13 @@ var colorStyle = colorMode === 'gradient'
   : primaryColor;
 
 var defaultConsent = {
-  'ad_storage': 'denied',
-  'ad_user_data': 'denied',
-  'ad_personalization': 'denied',
-  'analytics_storage': 'denied',
-  'functionality_storage': 'denied',
-  'personalization_storage': 'denied',
-  'security_storage': 'granted'
+  'ad_storage': data.defaultAdStorage || 'denied',
+  'ad_user_data': data.defaultAdUserData || 'denied',
+  'ad_personalization': data.defaultAdPersonalization || 'denied',
+  'analytics_storage': data.defaultAnalyticsStorage || 'denied',
+  'functionality_storage': data.defaultFunctionalityStorage || 'denied',
+  'personalization_storage': data.defaultPersonalizationStorage || 'denied',
+  'security_storage': data.defaultSecurityStorage || 'granted'
 };
 
 if (waitForUpdate) {
@@ -320,7 +453,7 @@ var config = {
 
 setInWindow('__dcCmpConfig', config, true);
 
-injectScript('https://cdn.jsdelivr.net/gh/DataCrew-Agency/datacrew-cmp@main/dist/consent-bar.min.js', data.gtmOnSuccess, data.gtmOnFailure, 'dataCrewCMP');
+injectScript('https://cdn.jsdelivr.net/gh/DataCrew-Agency/datacrew-cmp@5a1e05d/dist/consent-bar.min.js', data.gtmOnSuccess, data.gtmOnFailure, 'dataCrewCMP');
 
 
 ___WEB_PERMISSIONS___
@@ -500,7 +633,7 @@ ___WEB_PERMISSIONS___
             "listItem": [
               {
                 "type": 1,
-                "string": "https://cdn.jsdelivr.net/gh/DataCrew-Agency/datacrew-cmp@main/*"
+                "string": "https://cdn.jsdelivr.net/gh/DataCrew-Agency/datacrew-cmp@5a1e05d/*"
               }
             ]
           }
