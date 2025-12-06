@@ -3,9 +3,6 @@
 # Dependencies
 node_modules/
 
-# Build outputs (if using build script)
-dist/
-
 # OS files
 .DS_Store
 Thumbs.db
