@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DataCrew CMP - Test Page</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+    }
+    .control-panel {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .control-panel h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-size: 18px;
+      color: #333;
+    }
+    .control-group {
+      margin-bottom: 20px;
+    }
+    .control-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+    }
+    .control-group input[type="text"],
+    .control-group select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .control-group input[type="color"] {
+      width: 60px;
+      height: 40px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .control-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .checkbox-group input {
+      width: 18px;
+      height: 18px;
+    }
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #FA4716 0%, #FA6212 100%);
+      color: white;
+    }
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+      border: 1px solid #d1d5db;
+    }
+    .btn-secondary:hover {
+      background: #e5e7eb;
+    }
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+    }
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+    .console-output {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 16px;
+      border-radius: 8px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 20px;
+    }
+    .console-output .log-entry {
+      margin-bottom: 4px;
+    }
+    .console-output .timestamp {
+      color: #6a9955;
+    }
+    .console-output .event {
+      color: #dcdcaa;
+    }
+    .console-output .data {
+      color: #9cdcfe;
+    }
+    .status-indicator {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-granted {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .status-denied {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .consent-status {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .consent-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+    .consent-item .label {
+      font-weight: 500;
+      color: #333;
+      font-size: 13px;
+    }
+    .sample-content {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .sample-content h2 {
+      margin-top: 0;
+    }
+    .sample-content p {
+      color: #666;
+      line-height: 1.6;
+    }
+
+    /* Test button classes - simulating site styles */
+    .btn-light {
+      background: #f8f9fa;
+      color: #212529;
+      border: 1px solid #dee2e6;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-light:hover {
+      background: #e9ecef;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🍪 DataCrew CMP - Test Page</h1>
+    <p class="subtitle">Standalone test page for consent banner development</p>
+
+    <div class="control-panel">
+      <h2>⚙️ Configuration</h2>
+      
+      <div class="control-row">
+        <div class="control-group">
+          <label>Color Mode</label>
+          <select id="colorMode" onchange="updateConfig()">
+            <option value="gradient">Gradient</option>
+            <option value="solid">Solid Color</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Primary Color</label>
+          <input type="color" id="primaryColor" value="#FA4716" onchange="updateConfig()">
+        </div>
+        <div class="control-group">
+          <label>Secondary Color (Gradient)</label>
+          <input type="color" id="secondaryColor" value="#FA6212" onchange="updateConfig()">
+        </div>
+      </div>
+
+      <div class="control-row">
+        <div class="control-group">
+          <label>Banner Position</label>
+          <select id="bannerPosition" onchange="updateConfig()">
+            <option value="center">Center (Modal)</option>
+            <option value="bottom">Bottom Bar</option>
+            <option value="bottom-left">Bottom Left Corner</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Language</label>
+          <select id="languageMode" onchange="updateConfig()">
+            <option value="auto">Auto-detect</option>
+            <option value="hu">Hungarian</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>&nbsp;</label>
+          <div class="checkbox-group">
+            <input type="checkbox" id="showOverlay" checked onchange="updateConfig()">
+            <label for="showOverlay" style="margin-bottom: 0; font-weight: normal;">Show Overlay</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="control-row">
+        <div class="control-group">
+          <label>Primary Button Class</label>
+          <input type="text" id="primaryButtonClass" value="btn-primary" placeholder="Leave empty for fallback" onchange="updateConfig()">
+        </div>
+        <div class="control-group">
+          <label>Secondary Button Class</label>
+          <input type="text" id="secondaryButtonClass" value="btn-light" placeholder="Leave empty for fallback" onchange="updateConfig()">
+        </div>
+      </div>
+
+      <div class="control-row">
+        <div class="control-group">
+          <label>Privacy Policy URL</label>
+          <input type="text" id="privacyPolicyUrl" value="/privacy-policy/" onchange="updateConfig()">
+        </div>
+        <div class="control-group">
+          <label>Cookie Domain</label>
+          <input type="text" id="cookieDomain" value="" placeholder="Leave empty for current domain" onchange="updateConfig()">
+        </div>
+      </div>
+    </div>
+
+    <div class="control-panel">
+      <h2>🎮 Controls</h2>
+      <button class="btn btn-primary" onclick="DataCrewConsent.show()">Show Banner</button>
+      <button class="btn btn-secondary" onclick="DataCrewConsent.show(true)">Show Customize View</button>
+      <button class="btn btn-secondary" onclick="DataCrewConsent.hide()">Hide Banner</button>
+      <button class="btn btn-danger" onclick="DataCrewConsent.clearConsent()">Clear Consent</button>
+      <button class="btn btn-secondary" onclick="refreshStatus()">Refresh Status</button>
+    </div>
+
+    <div class="control-panel">
+      <h2>📊 Current Consent Status</h2>
+      <div class="consent-status" id="consentStatus">
+        <!-- Filled by JavaScript -->
+      </div>
+    </div>
+
+    <div class="control-panel">
+      <h2>📋 Console Log</h2>
+      <div class="console-output" id="consoleOutput">
+        <div class="log-entry"><span class="timestamp">[Ready]</span> DataCrew CMP Test Page loaded</div>
+      </div>
+    </div>
+
+    <div class="sample-content">
+      <h2>Sample Page Content</h2>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
+        Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+      </p>
+      <p>
+        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
+        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+      </p>
+    </div>
+  </div>
+
+  <!-- Mock gtag function -->
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+      logToConsole('gtag', Array.from(arguments));
+    }
+  </script>
+
+  <!-- Consent Bar Script -->
+  <script>
+    // Configuration object - modified by the control panel
+    var CONFIG = {
+      cookieName: 'consentMode',
+      cookieDomain: '',
+      cookieExpiryDays: 365,
+      privacyPolicyUrl: '/privacy-policy/',
+      colorStyle: 'linear-gradient(135deg, #FA4716 0%, #FA6212 100%)',
+      primaryColor: '#FA4716',
+      bannerPosition: 'center',
+      showOverlay: true,
+      primaryButtonClass: 'btn-primary',
+      secondaryButtonClass: 'btn-light',
+      languageMode: 'auto',
+      globalObjectName: 'DataCrewConsent'
+    };
+
+    function updateConfig() {
+      var colorMode = document.getElementById('colorMode').value;
+      var primaryColor = document.getElementById('primaryColor').value;
+      var secondaryColor = document.getElementById('secondaryColor').value;
+      
+      CONFIG.primaryColor = primaryColor;
+      CONFIG.colorStyle = colorMode === 'gradient' 
+        ? 'linear-gradient(135deg, ' + primaryColor + ' 0%, ' + secondaryColor + ' 100%)'
+        : primaryColor;
+      CONFIG.bannerPosition = document.getElementById('bannerPosition').value;
+      CONFIG.languageMode = document.getElementById('languageMode').value;
+      CONFIG.showOverlay = document.getElementById('showOverlay').checked;
+      CONFIG.primaryButtonClass = document.getElementById('primaryButtonClass').value;
+      CONFIG.secondaryButtonClass = document.getElementById('secondaryButtonClass').value;
+      CONFIG.privacyPolicyUrl = document.getElementById('privacyPolicyUrl').value;
+      CONFIG.cookieDomain = document.getElementById('cookieDomain').value;
+      
+      // Re-inject styles with new config
+      var existingStyles = document.getElementById('dc-consent-styles');
+      if (existingStyles) existingStyles.remove();
+      
+      logToConsole('config', 'Configuration updated');
+      
+      // Recreate banner if visible
+      if (document.getElementById('dc-consent-banner')) {
+        DataCrewConsent.show();
+      }
+    }
+
+    function logToConsole(type, data) {
+      var output = document.getElementById('consoleOutput');
+      var timestamp = new Date().toLocaleTimeString();
+      var entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerHTML = '<span class="timestamp">[' + timestamp + ']</span> <span class="event">' + type + ':</span> <span class="data">' + JSON.stringify(data) + '</span>';
+      output.appendChild(entry);
+      output.scrollTop = output.scrollHeight;
+    }
+
+    function refreshStatus() {
+      var consent = DataCrewConsent.getConsent();
+      var statusContainer = document.getElementById('consentStatus');
+      
+      var categories = [
+        { key: 'analytics_storage', label: 'Analytics' },
+        { key: 'ad_storage', label: 'Ad Storage' },
+        { key: 'ad_user_data', label: 'Ad User Data' },
+        { key: 'ad_personalization', label: 'Ad Personalization' }
+      ];
+      
+      var html = '';
+      categories.forEach(function(cat) {
+        var value = consent ? consent[cat.key] : 'denied';
+        var statusClass = value === 'granted' ? 'status-granted' : 'status-denied';
+        html += '<div class="consent-item">' +
+          '<span class="label">' + cat.label + '</span>' +
+          '<span class="status-indicator ' + statusClass + '">' + (value || 'denied') + '</span>' +
+        '</div>';
+      });
+      
+      statusContainer.innerHTML = html;
+    }
+  </script>
+
+  <!-- Main Consent Bar Code -->
+  <script>
+    (function() {
+      'use strict';
+
+      var translations = {
+        hu: {
+          title: 'Süti beállítások',
+          description: 'A böngészési élmény fokozása, a személyre szabott hirdetések vagy tartalmak megjelenítése, valamint a forgalom elemzése érdekében sütiket (cookie) használunk. A "Minden elfogadása" gombra kattintva hozzájárulhat a legjobb böngészési élményt biztosító sütik használatához is. További információt a',
+          linkText: 'süti tájékoztatóban',
+          linkSuffix: 'talál.',
+          acceptAll: 'Minden elfogadása',
+          customize: 'Testreszabás',
+          onlySelected: 'Csak kiválasztottak',
+          rejectAll: 'Minden elutasítása',
+          necessary: 'Kötelező',
+          necessaryDesc: 'A kötelező sütik segítenek használhatóvá tenni a weboldalunkat azáltal, hogy engedélyeznek olyan alapvető funkciókat, mint az oldalon való navigáció és a weboldal biztonságos területeihez való hozzáférés.',
+          analytics: 'Statisztikai',
+          analyticsDesc: 'Az adatok névtelen formában való gyűjtésén és jelentésén keresztül a statisztikai sütik segítenek a weboldal tulajdonosának abban, hogy megértse, hogyan lépnek interakcióba a látogatók a weboldallal.',
+          marketing: 'Marketing',
+          marketingDesc: 'A hirdetési sütiket arra használják, hogy a látogatókat személyre szabott hirdetésekkel juttassák el a korábban meglátogatott oldalak alapján.'
+        },
+        en: {
+          title: 'Cookie Settings',
+          description: 'We use cookies to enhance your browsing experience, display personalized ads or content, and analyze traffic. By clicking "Accept All", you consent to the use of cookies that provide the best browsing experience. Learn more in our',
+          linkText: 'cookie policy',
+          linkSuffix: '.',
+          acceptAll: 'Accept All',
+          customize: 'Customize',
+          onlySelected: 'Only Selected',
+          rejectAll: 'Reject All',
+          necessary: 'Necessary',
+          necessaryDesc: 'Necessary cookies help make the website usable by enabling basic functions such as page navigation and access to secure areas of the website.',
+          analytics: 'Statistical',
+          analyticsDesc: 'Statistical cookies help website owners understand how visitors interact with the website by collecting and reporting information anonymously.',
+          marketing: 'Marketing',
+          marketingDesc: 'Marketing cookies are used to deliver personalized ads to visitors based on previously visited pages.'
+        }
+      };
+
+      var state = {
+        view: 'initial',
+        language: detectLanguage(),
+        analyticsConsent: false,
+        marketingConsent: false,
+        isRevisit: false,
+        bannerElement: null,
+        overlayElement: null
+      };
+
+      function detectLanguage() {
+        if (CONFIG.languageMode !== 'auto') return CONFIG.languageMode;
+        var browserLang = (navigator.language || navigator.userLanguage || 'hu').toLowerCase();
+        return browserLang.startsWith('en') ? 'en' : 'hu';
+      }
+
+      function t(key) {
+        return translations[state.language][key] || key;
+      }
+
+      function getCookie(name) {
+        var value = '; ' + document.cookie;
+        var parts = value.split('; ' + name + '=');
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+      }
+
+      function setCookie(name, value, days) {
+        var date = new Date();
+        date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+        var expires = 'expires=' + date.toUTCString();
+        var domain = CONFIG.cookieDomain ? '; domain=' + CONFIG.cookieDomain : '';
+        document.cookie = name + '=' + value + '; ' + expires + '; path=/' + domain + '; secure; samesite=lax';
+      }
+
+      function deleteCookie(name) {
+        var domain = CONFIG.cookieDomain ? '; domain=' + CONFIG.cookieDomain : '';
+        document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/' + domain;
+      }
+
+      function hasConsent() {
+        return getCookie(CONFIG.cookieName) !== null;
+      }
+
+      function getConsentPreferences() {
+        var cookie = getCookie(CONFIG.cookieName);
+        if (!cookie) return null;
+        try {
+          return JSON.parse(decodeURIComponent(cookie));
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function saveConsent(preferences) {
+        var consentMode = {
+          ad_storage: preferences.marketing ? 'granted' : 'denied',
+          ad_user_data: preferences.marketing ? 'granted' : 'denied',
+          analytics_storage: preferences.analytics ? 'granted' : 'denied',
+          ad_personalization: preferences.marketing ? 'granted' : 'denied'
+        };
+
+        setCookie(CONFIG.cookieName, encodeURIComponent(JSON.stringify(consentMode)), CONFIG.cookieExpiryDays);
+
+        if (typeof gtag === 'function') {
+          gtag('consent', 'update', consentMode);
+        }
+
+        if (window.dataLayer) {
+          window.dataLayer.push({ event: 'consent_updated' });
+        }
+        
+        logToConsole('consent', consentMode);
+        refreshStatus();
+      }
+
+      function classExists(className) {
+        if (!className) return false;
+        try {
+          for (var i = 0; i < document.styleSheets.length; i++) {
+            var sheet = document.styleSheets[i];
+            try {
+              var rules = sheet.cssRules || sheet.rules;
+              if (rules) {
+                for (var j = 0; j < rules.length; j++) {
+                  if (rules[j].selectorText && rules[j].selectorText.indexOf('.' + className) !== -1) {
+                    return true;
+                  }
+                }
+              }
+            } catch (e) {}
+          }
+        } catch (e) {}
+        return false;
+      }
+
+      function injectStyles() {
+        if (document.getElementById('dc-consent-styles')) {
+          document.getElementById('dc-consent-styles').remove();
+        }
+
+        var style = document.createElement('style');
+        style.id = 'dc-consent-styles';
+
+        var positionStyles = {
+          center: 'position:fixed!important;top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important;max-width:1024px!important;width:90%!important;border-radius:24px!important;',
+          bottom: 'position:fixed!important;bottom:0!important;left:0!important;right:0!important;width:100%!important;border-radius:24px 24px 0 0!important;',
+          'bottom-left': 'position:fixed!important;bottom:20px!important;left:20px!important;max-width:420px!important;width:calc(100% - 40px)!important;border-radius:16px!important;'
+        };
+
+        style.textContent =
+          '.dc-consent-overlay{position:fixed!important;inset:0!important;background-color:rgba(0,0,0,0.5)!important;z-index:99998!important;}' +
+          '.dc-consent-overlay.dc-hidden{display:none!important;}' +
+          '.dc-consent-banner{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif!important;' + positionStyles[CONFIG.bannerPosition] + 'background-color:#fff!important;box-shadow:0 4px 24px rgba(0,0,0,0.15)!important;z-index:99999!important;overflow:hidden!important;}' +
+          '.dc-consent-banner.dc-customize-view{max-width:900px!important;max-height:90vh!important;overflow-y:auto!important;}' +
+          '.dc-consent-banner.dc-hidden{display:none!important;}' +
+          '.dc-consent-title{background:' + CONFIG.colorStyle + '!important;color:white!important;text-align:center!important;font-size:20px!important;padding:14px 20px!important;margin:0!important;font-weight:700!important;}' +
+          '.dc-consent-text{font-size:14px!important;padding:20px!important;line-height:1.5!important;color:#333333!important;margin:0!important;}' +
+          '.dc-consent-text a{color:' + CONFIG.primaryColor + '!important;text-decoration:underline!important;}' +
+          '.dc-consent-text a:hover{opacity:0.8!important;}' +
+          '.dc-consent-buttons{display:flex!important;flex-direction:row!important;justify-content:center!important;gap:10px!important;padding:0 20px 20px 20px!important;flex-wrap:wrap!important;}' +
+          '.dc-consent-buttons button{border:none!important;padding:12px 24px!important;text-align:center!important;text-decoration:none!important;font-size:14px!important;cursor:pointer!important;border-radius:8px!important;font-weight:600!important;white-space:nowrap!important;min-width:140px!important;transition:all 0.2s ease!important;}' +
+          '.dc-btn-primary-fallback{background:' + CONFIG.colorStyle + '!important;color:white!important;}' +
+          '.dc-btn-primary-fallback:hover{opacity:0.9!important;}' +
+          '.dc-btn-secondary-fallback{background:#f3f4f6!important;color:#374151!important;border:1px solid #d1d5db!important;}' +
+          '.dc-btn-secondary-fallback:hover{background:#e5e7eb!important;}' +
+          '.dc-consent-categories{display:flex!important;flex-direction:column!important;gap:12px!important;padding:0 20px!important;margin-bottom:20px!important;}' +
+          '.dc-category{display:grid!important;grid-template-columns:1fr auto!important;gap:16px!important;align-items:start!important;padding:16px!important;border-radius:12px!important;background:#f8f8f8!important;}' +
+          '.dc-category-info{display:flex!important;flex-direction:column!important;gap:6px!important;}' +
+          '.dc-category-title{font-size:16px!important;font-weight:600!important;color:#333!important;margin:0!important;}' +
+          '.dc-category-description{font-size:13px!important;line-height:1.5!important;color:#666!important;margin:0!important;}' +
+          '.dc-category-toggle{display:flex!important;align-items:center!important;justify-content:center!important;padding-top:4px!important;}' +
+          '.dc-toggle{display:none!important;}' +
+          '.dc-toggle+.dc-toggle-btn{outline:0!important;display:block!important;width:50px!important;height:26px!important;position:relative!important;cursor:pointer!important;user-select:none!important;background:#ccc!important;border-radius:26px!important;padding:2px!important;transition:all 0.3s ease!important;}' +
+          '.dc-toggle+.dc-toggle-btn:after{position:absolute!important;display:block!important;content:""!important;width:22px!important;height:22px!important;left:2px!important;top:2px!important;border-radius:50%!important;background:#fff!important;transition:all 0.2s ease!important;box-shadow:0 2px 4px rgba(0,0,0,0.2)!important;}' +
+          '.dc-toggle:checked+.dc-toggle-btn{background:' + CONFIG.colorStyle + '!important;}' +
+          '.dc-toggle:checked+.dc-toggle-btn:after{left:26px!important;}' +
+          '.dc-toggle-btn.dc-disabled{background:#999!important;cursor:not-allowed!important;opacity:0.7!important;}' +
+          '.dc-toggle-btn.dc-disabled:after{background:#e0e0e0!important;}' +
+          '@media(max-width:768px){' +
+          '.dc-consent-banner{width:95%!important;max-height:85vh!important;overflow-y:auto!important;}' +
+          '.dc-consent-buttons{flex-direction:column!important;align-items:center!important;}' +
+          '.dc-consent-buttons button{width:100%!important;max-width:280px!important;}' +
+          '}';
+
+        document.head.appendChild(style);
+      }
+
+      function createBanner() {
+        if (state.bannerElement) state.bannerElement.remove();
+        if (state.overlayElement) state.overlayElement.remove();
+        
+        // Update language based on current config
+        state.language = detectLanguage();
+        
+        injectStyles();
+
+        var overlay = document.createElement('div');
+        overlay.className = 'dc-consent-overlay' + (CONFIG.showOverlay ? '' : ' dc-hidden');
+        overlay.id = 'dc-consent-overlay';
+        overlay.onclick = function() { if (state.isRevisit) hideBanner(); };
+
+        var banner = document.createElement('div');
+        banner.className = 'dc-consent-banner' + (state.view === 'customize' ? ' dc-customize-view' : '');
+        banner.id = 'dc-consent-banner';
+
+        var title = document.createElement('div');
+        title.className = 'dc-consent-title';
+        title.textContent = t('title');
+        banner.appendChild(title);
+
+        var desc = document.createElement('p');
+        desc.className = 'dc-consent-text';
+        desc.innerHTML = t('description') + ' <a href="' + CONFIG.privacyPolicyUrl + '" target="_blank" rel="noopener noreferrer">' + t('linkText') + '</a> ' + t('linkSuffix');
+        banner.appendChild(desc);
+
+        var usePrimaryClass = CONFIG.primaryButtonClass && classExists(CONFIG.primaryButtonClass);
+        var useSecondaryClass = CONFIG.secondaryButtonClass && classExists(CONFIG.secondaryButtonClass);
+        var primaryBtnClass = usePrimaryClass ? CONFIG.primaryButtonClass : 'dc-btn-primary-fallback';
+        var secondaryBtnClass = useSecondaryClass ? CONFIG.secondaryButtonClass : 'dc-btn-secondary-fallback';
+
+        if (state.view === 'initial') {
+          var buttons = document.createElement('div');
+          buttons.className = 'dc-consent-buttons';
+
+          var acceptAllBtn = document.createElement('button');
+          acceptAllBtn.className = primaryBtnClass;
+          acceptAllBtn.textContent = t('acceptAll');
+          acceptAllBtn.onclick = handleAcceptAll;
+          buttons.appendChild(acceptAllBtn);
+
+          var customizeBtn = document.createElement('button');
+          customizeBtn.className = secondaryBtnClass;
+          customizeBtn.textContent = t('customize');
+          customizeBtn.onclick = handleCustomize;
+          buttons.appendChild(customizeBtn);
+
+          banner.appendChild(buttons);
+        } else {
+          var categories = document.createElement('div');
+          categories.className = 'dc-consent-categories';
+          categories.appendChild(createCategory('necessary', t('necessary'), t('necessaryDesc'), true, true));
+          categories.appendChild(createCategory('analytics', t('analytics'), t('analyticsDesc'), state.analyticsConsent, false));
+          categories.appendChild(createCategory('marketing', t('marketing'), t('marketingDesc'), state.marketingConsent, false));
+          banner.appendChild(categories);
+
+          var buttons = document.createElement('div');
+          buttons.className = 'dc-consent-buttons';
+
+          var acceptAllBtn = document.createElement('button');
+          acceptAllBtn.className = primaryBtnClass;
+          acceptAllBtn.textContent = t('acceptAll');
+          acceptAllBtn.onclick = handleAcceptAll;
+          buttons.appendChild(acceptAllBtn);
+
+          var selectedBtn = document.createElement('button');
+          selectedBtn.className = secondaryBtnClass;
+          selectedBtn.textContent = t('onlySelected');
+          selectedBtn.onclick = handleAcceptSelected;
+          buttons.appendChild(selectedBtn);
+
+          var rejectBtn = document.createElement('button');
+          rejectBtn.className = secondaryBtnClass;
+          rejectBtn.textContent = t('rejectAll');
+          rejectBtn.onclick = handleRejectAll;
+          buttons.appendChild(rejectBtn);
+
+          banner.appendChild(buttons);
+        }
+
+        document.body.appendChild(overlay);
+        document.body.appendChild(banner);
+        state.overlayElement = overlay;
+        state.bannerElement = banner;
+      }
+
+      function createCategory(id, title, description, checked, disabled) {
+        var category = document.createElement('div');
+        category.className = 'dc-category';
+
+        var info = document.createElement('div');
+        info.className = 'dc-category-info';
+
+        var titleEl = document.createElement('h3');
+        titleEl.className = 'dc-category-title';
+        titleEl.textContent = title;
+        info.appendChild(titleEl);
+
+        var descEl = document.createElement('p');
+        descEl.className = 'dc-category-description';
+        descEl.textContent = description;
+        info.appendChild(descEl);
+
+        category.appendChild(info);
+
+        var toggleWrap = document.createElement('div');
+        toggleWrap.className = 'dc-category-toggle';
+
+        var toggle = document.createElement('input');
+        toggle.type = 'checkbox';
+        toggle.className = 'dc-toggle';
+        toggle.id = 'dc-toggle-' + id;
+        toggle.checked = checked;
+        toggle.disabled = disabled;
+        toggle.onchange = function() {
+          if (id === 'analytics') state.analyticsConsent = toggle.checked;
+          else if (id === 'marketing') state.marketingConsent = toggle.checked;
+        };
+        toggleWrap.appendChild(toggle);
+
+        var label = document.createElement('label');
+        label.className = 'dc-toggle-btn' + (disabled ? ' dc-disabled' : '');
+        label.htmlFor = 'dc-toggle-' + id;
+        toggleWrap.appendChild(label);
+
+        category.appendChild(toggleWrap);
+        return category;
+      }
+
+      function handleAcceptAll() {
+        state.analyticsConsent = true;
+        state.marketingConsent = true;
+        saveConsent({ necessary: true, analytics: true, marketing: true });
+        hideBanner();
+      }
+
+      function handleCustomize() {
+        state.view = 'customize';
+        createBanner();
+      }
+
+      function handleAcceptSelected() {
+        saveConsent({
+          necessary: true,
+          analytics: state.analyticsConsent,
+          marketing: state.marketingConsent
+        });
+        hideBanner();
+      }
+
+      function handleRejectAll() {
+        state.analyticsConsent = false;
+        state.marketingConsent = false;
+        saveConsent({ necessary: true, analytics: false, marketing: false });
+        hideBanner();
+      }
+
+      function hideBanner() {
+        state.view = 'initial';
+        if (state.bannerElement) { state.bannerElement.remove(); state.bannerElement = null; }
+        if (state.overlayElement) { state.overlayElement.remove(); state.overlayElement = null; }
+      }
+
+      window[CONFIG.globalObjectName] = {
+        show: function(forceCustomize) {
+          state.isRevisit = true;
+          state.view = forceCustomize ? 'customize' : 'initial';
+          var existing = getConsentPreferences();
+          if (existing) {
+            state.analyticsConsent = existing.analytics_storage === 'granted';
+            state.marketingConsent = existing.ad_storage === 'granted';
+          } else {
+            state.analyticsConsent = false;
+            state.marketingConsent = false;
+          }
+          createBanner();
+        },
+        hide: function() { hideBanner(); },
+        clearConsent: function() {
+          deleteCookie(CONFIG.cookieName);
+          state.analyticsConsent = false;
+          state.marketingConsent = false;
+          state.isRevisit = false;
+          state.view = 'initial';
+          createBanner();
+          logToConsole('consent', 'Cleared');
+          refreshStatus();
+        },
+        getConsent: function() { return getConsentPreferences(); },
+        hasConsent: function() { return hasConsent(); },
+        setLanguage: function(lang) {
+          if (lang === 'hu' || lang === 'en') {
+            state.language = lang;
+            if (state.bannerElement) createBanner();
+          }
+        },
+        getLanguage: function() { return state.language; }
+      };
+
+      // Initialize - show banner if no consent exists
+      if (!hasConsent()) {
+        state.isRevisit = false;
+        createBanner();
+      }
+      
+      // Initial status refresh
+      setTimeout(refreshStatus, 100);
+
+    })();
+  </script>
+</body>
+</html>

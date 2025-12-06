@@ -1,0 +1,5 @@
+homepage: https://datacrew.hu
+documentation: https://github.com/datacrew/datacrew-cmp/blob/main/README.md
+versions:
+  - sha: # Will be filled after first commit
+    changeNotes: Initial release with Consent Mode v2 support
