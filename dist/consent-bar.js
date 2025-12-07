@@ -319,7 +319,13 @@
             // Footer
             ".dcf{text-align:right;padding:0 16px 10px;font-size:10px;color:#999}" +
             ".dcf a{color:#999;text-decoration:none}" +
-            ".dcf a:hover{text-decoration:underline}";
+            ".dcf a:hover{text-decoration:underline}" +
+
+            // Mobile responsive styles
+            "@media(max-width:768px){" +
+            ".dcbt{flex-direction:row-reverse}" +
+            ".dccts{max-height:50vh;overflow-y:auto;-webkit-overflow-scrolling:touch}" +
+            "}";
         
         document.head.appendChild(style);
     }
