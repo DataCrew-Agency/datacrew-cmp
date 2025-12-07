@@ -206,16 +206,15 @@
 
         style.textContent =
             // Fixed wrapper - covers entire viewport
-            // This wrapper ensures proper positioning even when parent elements have transforms
-            ".dcw{position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;z-index:99998;pointer-events:none}" +
+            ".dcw{position:fixed;top:0;left:0;width:100%;height:100%;z-index:99998;pointer-events:none}" +
             ".dcw>*{pointer-events:auto}" +
-            
+
             // Overlay - positioned within wrapper
             ".dco{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5)}" +
             ".dco.dch{display:none}" +
-            
-            // Banner base - positioned within wrapper
-            ".dcb{position:absolute;font-family:system-ui,sans-serif;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,0.15);display:flex;flex-direction:column;box-sizing:border-box}" +
+
+            // Banner - fixed position
+            ".dcb{position:fixed;font-family:system-ui,sans-serif;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,0.15);display:flex;flex-direction:column;box-sizing:border-box;z-index:99999}" +
             
             // Center position (desktop)
             ".dcb.dcp-center{top:50%;left:50%;transform:translate(-50%,-50%);max-width:560px;width:90%;max-height:85vh;border-radius:16px}" +
@@ -273,6 +272,7 @@
             ".dctx{font-size:12px;padding:12px}" +
             ".dcbt{padding:10px 12px}" +
             ".dcbt button{padding:10px 14px;font-size:12px;flex:1;min-width:0}" +
+            ".dcb:not(.dccv) .dcbt{flex-direction:row-reverse}" +
             ".dccts{padding:0 12px 8px}" +
             ".dcct{padding:10px}" +
             ".dccd{font-size:11px}" +
