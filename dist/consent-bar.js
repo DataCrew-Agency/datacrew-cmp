@@ -73,7 +73,8 @@
         mc: 0,               // Marketing consent (0 = off, 1 = on)
         rv: 0,               // Revisit mode (0 = first visit, 1 = revisit)
         be: null,            // Banner element reference
-        oe: null             // Overlay element reference
+        oe: null,            // Overlay element reference
+        wr: null             // Wrapper element reference
     };
 
     // ===========================================
@@ -140,6 +141,10 @@
         }
     }
 
+    function isMobile() {
+        return window.innerWidth <= 600;
+    }
+
     // ===========================================
     // CONSENT EVENT HANDLING
     // ===========================================
@@ -199,30 +204,37 @@
         var style = document.createElement("style");
         style.id = "dcs";
 
-        // Desktop position styles
-        var pos;
-        if (config.bp === "center") {
-            pos = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);max-width:560px;width:90%;border-radius:16px";
-        } else if (config.bp === "bottom") {
-            pos = "position:fixed;bottom:0;left:0;right:0;width:100%;border-radius:16px 16px 0 0";
-        } else {
-            pos = "position:fixed;bottom:20px;left:20px;max-width:400px;width:calc(100% - 40px);border-radius:12px";
-        }
-
         style.textContent =
-            // Overlay
-            ".dco{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99998;overflow:hidden}" +
+            // Fixed wrapper - covers entire viewport
+            // This wrapper ensures proper positioning even when parent elements have transforms
+            ".dcw{position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;z-index:99998;pointer-events:none}" +
+            ".dcw>*{pointer-events:auto}" +
+            
+            // Overlay - positioned within wrapper
+            ".dco{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5)}" +
             ".dco.dch{display:none}" +
             
-            // Banner base - flex column for proper layout
-            ".dcb{font-family:system-ui,sans-serif;" + pos + ";background:#fff;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:99999;max-height:85vh;display:flex;flex-direction:column}" +
+            // Banner base - positioned within wrapper
+            ".dcb{position:absolute;font-family:system-ui,sans-serif;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,0.15);display:flex;flex-direction:column;box-sizing:border-box}" +
+            
+            // Center position (desktop)
+            ".dcb.dcp-center{top:50%;left:50%;transform:translate(-50%,-50%);max-width:560px;width:90%;max-height:85vh;border-radius:16px}" +
+            
+            // Bottom position (desktop)
+            ".dcb.dcp-bottom{bottom:0;left:0;right:0;width:100%;max-height:85vh;border-radius:16px 16px 0 0}" +
+            
+            // Bottom left position (desktop)
+            ".dcb.dcp-bottomleft{bottom:20px;left:20px;max-width:400px;width:calc(100% - 40px);max-height:85vh;border-radius:12px}" +
+            
+            // Customize view wider
             ".dcb.dccv{max-width:640px}" +
             
             // Title - fixed at top
-            ".dct{background:" + config.cs + ";color:#fff;text-align:center;font-size:18px;padding:12px;margin:0;font-weight:700;flex-shrink:0}" +
+            ".dct{background:" + config.cs + ";color:#fff;text-align:center;font-size:18px;padding:12px;margin:0;font-weight:700;flex-shrink:0;border-radius:16px 16px 0 0}" +
+            ".dcp-bottom .dct,.dcp-bottomleft .dct{border-radius:16px 16px 0 0}" +
             
             // Scrollable content wrapper
-            ".dcsc{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}" +
+            ".dcsc{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}" +
             
             // Description
             ".dctx{font-size:13px;padding:16px;color:#333;margin:0;line-height:1.5}" +
@@ -255,9 +267,9 @@
             
             // Mobile styles - all positions become bottom sheet
             "@media(max-width:600px){" +
-            ".dcb{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;transform:none!important;width:100%!important;max-width:100%!important;border-radius:16px 16px 0 0!important;max-height:80vh}" +
+            ".dcb{top:auto!important;left:0!important;right:0!important;bottom:0!important;transform:none!important;width:100%!important;max-width:100%!important;border-radius:16px 16px 0 0!important;max-height:80vh!important}" +
             ".dcb.dccv{max-width:100%!important}" +
-            ".dct{font-size:16px;padding:10px}" +
+            ".dct{font-size:16px;padding:10px;border-radius:16px 16px 0 0!important}" +
             ".dctx{font-size:12px;padding:12px}" +
             ".dcbt{padding:10px 12px}" +
             ".dcbt button{padding:10px 14px;font-size:12px;flex:1;min-width:0}" +
@@ -304,21 +316,27 @@
     }
 
     function createBanner() {
-        if (state.be) state.be.remove();
-        if (state.oe) state.oe.remove();
+        // Remove existing wrapper if any
+        if (state.wr) state.wr.remove();
         
         injectStyles();
         
-        // Overlay
+        // Create fixed wrapper - this covers the entire viewport
+        var wrapper = document.createElement("div");
+        wrapper.className = "dcw";
+        
+        // Overlay inside wrapper
         var overlay = document.createElement("div");
         overlay.className = "dco" + (config.so ? "" : " dch");
         overlay.onclick = function() {
             if (state.rv) hideBanner();
         };
+        wrapper.appendChild(overlay);
         
-        // Banner
+        // Banner inside wrapper
+        var posClass = isMobile() ? "dcp-bottom" : "dcp-" + config.bp;
         var banner = document.createElement("div");
-        banner.className = "dcb" + (state.v === "c" ? " dccv" : "");
+        banner.className = "dcb " + posClass + (state.v === "c" ? " dccv" : "");
         
         // Title
         var title = document.createElement("div");
@@ -401,9 +419,10 @@
         footer.innerHTML = '<a href="https://github.com/DataCrew-Agency/datacrew-cmp" target="_blank">Free CMP by DataCrew</a>';
         banner.appendChild(footer);
         
-        document.body.appendChild(overlay);
-        document.body.appendChild(banner);
+        wrapper.appendChild(banner);
+        document.body.appendChild(wrapper);
         
+        state.wr = wrapper;
         state.oe = overlay;
         state.be = banner;
     }
@@ -453,12 +472,10 @@
 
     function hideBanner() {
         state.v = "i";
-        if (state.be) {
-            state.be.remove();
+        if (state.wr) {
+            state.wr.remove();
+            state.wr = null;
             state.be = null;
-        }
-        if (state.oe) {
-            state.oe.remove();
             state.oe = null;
         }
     }
