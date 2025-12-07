@@ -264,9 +264,9 @@
             ".dcf a{color:#999;text-decoration:none}" +
             ".dcf a:hover{text-decoration:underline}" +
             
-            // Mobile styles - center position with smaller fonts
+            // Mobile styles - always center position
             "@media(max-width:600px){" +
-            ".dcb.dcp-center{top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important;width:95%!important;max-width:95%!important;max-height:85vh!important}" +
+            ".dcb{top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;transform:translate(-50%,-50%)!important;width:95%!important;max-width:95%!important;max-height:85vh!important;border-radius:16px!important}" +
             ".dct{font-size:16px;padding:10px}" +
             ".dctx{font-size:12px;padding:12px}" +
             ".dcbt{padding:10px 12px}" +
