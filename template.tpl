@@ -8,7 +8,8 @@ ___INFO___
   "displayName": "DataCrew CMP - Consent Management",
   "brand": {
     "id": "datacrew",
-    "displayName": "DataCrew"
+    "displayName": "DataCrew",
+    "thumbnail": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAADaklEQVR4nO2ZW4hNURjHf2MYl1wSuZQHLyIPeJAHkTy4vEhK8qBckksu5cFl8OJS4kEeJJcHpCQPLi+SB5cXISTXKJfBOGbG+LXW2Wf2nH322XvtM3Nmzv7X02z2d/n+e6+11l4bUqRIkSJFihQp/g8UAiuAI8B14DXwDmgG2oCvwAfgMXAHuAYcBVYChT2VeCowFjgNvAHa8ccP4CZwEBgXd+LCYC9wF/gVYeKdoQU4D+TGkXwRcCvG5DtDE3AEyEhW8unAUYKbJZHoAs4CyxKd/Ayg1mfyTcBxYBSwQ63wCEAzsMabRB8/k58MnAJqIiZfDRQBdxKYfCuwLGLyM4FVwN0EJl8DbIuY/DRgPVCZwOSrgLMRk58ArAYeJjD5a8DxCMn3BTYAD0I+qwK4EkHyqcBGoDbkszLgUoTJZwIbgYaQzyqBSxGSHwJsBhpDPisHLkdIfhiwBWgK+ewpcClC8rW7gKaQz8qASxGSnwBsB5pDPnsJXI6Q/GRgJ9AS8tlz4HKE5GcAe4C2kM+eAVfCkh8AbAW+hHxWAlyNkPxsYB/wLeSzx8C1sOQHApuATyGfPQKuh83EPGAj8D7gs4fA9bCZWAAUAx8CPrsP3AhLfhGwDnjr89k94GZY8muApcArn8/uALfCkl8PrACafT67DdwOS349sA5o8fmsArgTlvwmYCXQ6vPZTeBuWPKbgDVAm89nN4B7YclvAdYCnT6fXQceREl+O7AO6PL57BrwIEryO4H1QLfPZ1eBh1GS3w2sB372+OwK8ChK8vuBjcCvHp9dAh5HSf4AsAno9vnsIvAkSvJHgM1Az9vIi8DTKJ9VBJbQPX5OTqWEJd8AnIqQ/P+GKAUupwNb6R4fp4RSYU0cNYUldwlY3sOyfxqW3GVgZQ8m/xRYFeKzS8CakM8qgXVhyV0BNvRg8k+BTWHJXQU2h3xWAWwJS74K2BI2eVcNTCX43lwBbIuQ/PW0T7uJ1WkfARG4AeyIkPzNtP9A4vJwE7gnQvK30v7s/xJgbdpf/ufhNnBfhOTvpP3Rfx7uAQ9ESP5e2h/9y3EOHkZI/n7an/zL8RgeRUj+Qdof/A9FccIjeBIh+Udpf+6/Hy+Bp0M+e5r2x/59cYIzeBYh+adp/61/rEoRANXAc+AXUaPtfALYR7UgAAAASUVORK5CYII="
   },
   "description": "Free, lightweight Consent Management Platform with Google Consent Mode v2 support.",
   "containerContexts": [
@@ -113,14 +114,16 @@ ___TEMPLATE_PARAMETERS___
         "name": "primaryButtonClass",
         "displayName": "Primary Button CSS Class",
         "simpleValueType": true,
-        "defaultValue": ""
+        "defaultValue": "",
+        "help": "CSS class name for primary buttons (e.g. btn-primary). Leave empty for default styling."
       },
       {
         "type": "TEXT",
         "name": "secondaryButtonClass",
         "displayName": "Secondary Button CSS Class",
         "simpleValueType": true,
-        "defaultValue": ""
+        "defaultValue": "",
+        "help": "CSS class name for secondary buttons (e.g. btn-secondary). Leave empty for default styling."
       }
     ]
   },
@@ -324,7 +327,7 @@ ___TEMPLATE_PARAMETERS___
         "checkboxText": "Enable url_passthrough (default: disabled)",
         "simpleValueType": true,
         "defaultValue": false,
-        "help": "When enabled, ad click info is passed through URL parameters. Automatically enabled when marketing consent is granted."
+        "help": "When enabled, ad click info is passed through URL parameters. Automatically set to false when consent is given."
       }
     ]
   }
@@ -383,16 +386,18 @@ var existingConsent = getCookieValues(cookieName);
 if (existingConsent && existingConsent.length > 0) {
   var parsed = JSON.parse(existingConsent[0]);
   if (parsed) {
-    updateConsentState({
-      'ad_storage': parsed.ad_storage || 'denied',
-      'ad_user_data': parsed.ad_user_data || 'denied',
-      'ad_personalization': parsed.ad_personalization || 'denied',
-      'analytics_storage': parsed.analytics_storage || 'denied'
-    });
-    if (parsed.ad_storage === 'granted') {
-      gtagSet('ads_data_redaction', false);
-      gtagSet('url_passthrough', true);
+    var hasMarketing = false;
+    var hasStatistics = false;
+    if (parsed.indexOf) {
+      hasMarketing = parsed.indexOf('marketing') > -1;
+      hasStatistics = parsed.indexOf('statistics') > -1;
     }
+    updateConsentState({
+      'ad_storage': hasMarketing ? 'granted' : 'denied',
+      'ad_user_data': hasMarketing ? 'granted' : 'denied',
+      'ad_personalization': hasMarketing ? 'granted' : 'denied',
+      'analytics_storage': hasStatistics ? 'granted' : 'denied'
+    });
   }
 }
 
@@ -414,7 +419,7 @@ var config = {
 
 setInWindow('__dcCmpConfig', config, true);
 
-injectScript('https://cdn.jsdelivr.net/gh/DataCrew-Agency/datacrew-cmp@643d751/dist/consent-bar.min.js', data.gtmOnSuccess, data.gtmOnFailure, 'dataCrewCMP');
+injectScript('https://cdn.jsdelivr.net/gh/DataCrew-Agency/datacrew-cmp@bd4e0a7/dist/consent-bar.min.js', data.gtmOnSuccess, data.gtmOnFailure, 'dataCrewCMP');
 
 
 ___WEB_PERMISSIONS___
@@ -594,7 +599,7 @@ ___WEB_PERMISSIONS___
             "listItem": [
               {
                 "type": 1,
-                "string": "https://cdn.jsdelivr.net/gh/DataCrew-Agency/datacrew-cmp@643d751/*"
+                "string": "https://cdn.jsdelivr.net/gh/DataCrew-Agency/datacrew-cmp@bd4e0a7/*"
               }
             ]
           }
@@ -819,6 +824,8 @@ ___NOTES___
 
 DataCrew CMP - Free Consent Management Platform
 https://github.com/DataCrew-Agency/datacrew-cmp
+
+Cookie format: ["statistics","marketing"] - only granted categories are stored
 
 API Methods:
 - DataCrewConsent.show() - Show consent banner
