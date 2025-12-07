@@ -275,63 +275,6 @@ ___TEMPLATE_PARAMETERS___
         "help": "Controls storage for analytics purposes (e.g., visit duration)"
       },
       {
-        "type": "SELECT",
-        "name": "defaultFunctionalityStorage",
-        "displayName": "functionality_storage",
-        "macrosInSelect": false,
-        "selectItems": [
-          {
-            "value": "denied",
-            "displayValue": "denied"
-          },
-          {
-            "value": "granted",
-            "displayValue": "granted"
-          }
-        ],
-        "simpleValueType": true,
-        "defaultValue": "denied",
-        "help": "Controls storage for website functionality (e.g., language settings)"
-      },
-      {
-        "type": "SELECT",
-        "name": "defaultPersonalizationStorage",
-        "displayName": "personalization_storage",
-        "macrosInSelect": false,
-        "selectItems": [
-          {
-            "value": "denied",
-            "displayValue": "denied"
-          },
-          {
-            "value": "granted",
-            "displayValue": "granted"
-          }
-        ],
-        "simpleValueType": true,
-        "defaultValue": "denied",
-        "help": "Controls storage for personalization (e.g., video recommendations)"
-      },
-      {
-        "type": "SELECT",
-        "name": "defaultSecurityStorage",
-        "displayName": "security_storage",
-        "macrosInSelect": false,
-        "selectItems": [
-          {
-            "value": "denied",
-            "displayValue": "denied"
-          },
-          {
-            "value": "granted",
-            "displayValue": "granted"
-          }
-        ],
-        "simpleValueType": true,
-        "defaultValue": "granted",
-        "help": "Controls storage for security purposes (e.g., authentication, fraud prevention)"
-      },
-      {
         "type": "CHECKBOX",
         "name": "waitForUpdate",
         "checkboxText": "Wait for consent update before firing tags",
@@ -366,6 +309,22 @@ ___TEMPLATE_PARAMETERS___
         "displayName": "API Object Name",
         "simpleValueType": true,
         "defaultValue": "DataCrewConsent"
+      },
+      {
+        "type": "CHECKBOX",
+        "name": "adsDataRedaction",
+        "checkboxText": "Enable ads_data_redaction (default: enabled)",
+        "simpleValueType": true,
+        "defaultValue": true,
+        "help": "When enabled, ad click identifiers are redacted when ad_storage is denied. Automatically disabled when marketing consent is granted."
+      },
+      {
+        "type": "CHECKBOX",
+        "name": "urlPassthrough",
+        "checkboxText": "Enable url_passthrough (default: disabled)",
+        "simpleValueType": true,
+        "defaultValue": false,
+        "help": "When enabled, ad click info is passed through URL parameters. Automatically enabled when marketing consent is granted."
       }
     ]
   }
@@ -397,6 +356,8 @@ var languageMode = data.languageMode || 'auto';
 var waitForUpdate = data.waitForUpdate !== false;
 var waitForUpdateMs = makeNumber(data.waitForUpdateMs) || 500;
 var globalObjectName = data.globalObjectName || 'DataCrewConsent';
+var adsDataRedaction = data.adsDataRedaction !== false;
+var urlPassthrough = data.urlPassthrough === true;
 
 var colorStyle = colorMode === 'gradient' 
   ? 'linear-gradient(135deg, ' + primaryColor + ' 0%, ' + secondaryColor + ' 100%)'
@@ -406,10 +367,7 @@ var defaultConsent = {
   'ad_storage': data.defaultAdStorage || 'denied',
   'ad_user_data': data.defaultAdUserData || 'denied',
   'ad_personalization': data.defaultAdPersonalization || 'denied',
-  'analytics_storage': data.defaultAnalyticsStorage || 'denied',
-  'functionality_storage': data.defaultFunctionalityStorage || 'denied',
-  'personalization_storage': data.defaultPersonalizationStorage || 'denied',
-  'security_storage': data.defaultSecurityStorage || 'granted'
+  'analytics_storage': data.defaultAnalyticsStorage || 'denied'
 };
 
 if (waitForUpdate) {
@@ -417,8 +375,8 @@ if (waitForUpdate) {
 }
 
 setDefaultConsentState(defaultConsent);
-gtagSet('ads_data_redaction', true);
-gtagSet('url_passthrough', true);
+gtagSet('ads_data_redaction', adsDataRedaction);
+gtagSet('url_passthrough', urlPassthrough);
 
 var cookieName = 'datacrew-consent';
 var existingConsent = getCookieValues(cookieName);
@@ -429,11 +387,12 @@ if (existingConsent && existingConsent.length > 0) {
       'ad_storage': parsed.ad_storage || 'denied',
       'ad_user_data': parsed.ad_user_data || 'denied',
       'ad_personalization': parsed.ad_personalization || 'denied',
-      'analytics_storage': parsed.analytics_storage || 'denied',
-      'functionality_storage': 'granted',
-      'personalization_storage': 'granted',
-      'security_storage': 'granted'
+      'analytics_storage': parsed.analytics_storage || 'denied'
     });
+    if (parsed.ad_storage === 'granted') {
+      gtagSet('ads_data_redaction', false);
+      gtagSet('url_passthrough', true);
+    }
   }
 }
 
@@ -448,12 +407,14 @@ var config = {
   pb: primaryButtonClass,
   sb: secondaryButtonClass,
   lm: languageMode,
-  go: globalObjectName
+  go: globalObjectName,
+  adr: adsDataRedaction,
+  up: urlPassthrough
 };
 
 setInWindow('__dcCmpConfig', config, true);
 
-injectScript('https://cdn.jsdelivr.net/gh/DataCrew-Agency/datacrew-cmp@b70f5c9/dist/consent-bar.min.js', data.gtmOnSuccess, data.gtmOnFailure, 'dataCrewCMP');
+injectScript('https://cdn.jsdelivr.net/gh/DataCrew-Agency/datacrew-cmp@643d751/dist/consent-bar.min.js', data.gtmOnSuccess, data.gtmOnFailure, 'dataCrewCMP');
 
 
 ___WEB_PERMISSIONS___
@@ -633,7 +594,7 @@ ___WEB_PERMISSIONS___
             "listItem": [
               {
                 "type": 1,
-                "string": "https://cdn.jsdelivr.net/gh/DataCrew-Agency/datacrew-cmp@b70f5c9/*"
+                "string": "https://cdn.jsdelivr.net/gh/DataCrew-Agency/datacrew-cmp@643d751/*"
               }
             ]
           }
@@ -791,99 +752,6 @@ ___WEB_PERMISSIONS___
                   {
                     "type": 1,
                     "string": "ad_personalization"
-                  },
-                  {
-                    "type": 8,
-                    "boolean": true
-                  },
-                  {
-                    "type": 8,
-                    "boolean": true
-                  }
-                ]
-              },
-              {
-                "type": 3,
-                "mapKey": [
-                  {
-                    "type": 1,
-                    "string": "consentType"
-                  },
-                  {
-                    "type": 1,
-                    "string": "read"
-                  },
-                  {
-                    "type": 1,
-                    "string": "write"
-                  }
-                ],
-                "mapValue": [
-                  {
-                    "type": 1,
-                    "string": "functionality_storage"
-                  },
-                  {
-                    "type": 8,
-                    "boolean": true
-                  },
-                  {
-                    "type": 8,
-                    "boolean": true
-                  }
-                ]
-              },
-              {
-                "type": 3,
-                "mapKey": [
-                  {
-                    "type": 1,
-                    "string": "consentType"
-                  },
-                  {
-                    "type": 1,
-                    "string": "read"
-                  },
-                  {
-                    "type": 1,
-                    "string": "write"
-                  }
-                ],
-                "mapValue": [
-                  {
-                    "type": 1,
-                    "string": "personalization_storage"
-                  },
-                  {
-                    "type": 8,
-                    "boolean": true
-                  },
-                  {
-                    "type": 8,
-                    "boolean": true
-                  }
-                ]
-              },
-              {
-                "type": 3,
-                "mapKey": [
-                  {
-                    "type": 1,
-                    "string": "consentType"
-                  },
-                  {
-                    "type": 1,
-                    "string": "read"
-                  },
-                  {
-                    "type": 1,
-                    "string": "write"
-                  }
-                ],
-                "mapValue": [
-                  {
-                    "type": 1,
-                    "string": "security_storage"
                   },
                   {
                     "type": 8,
