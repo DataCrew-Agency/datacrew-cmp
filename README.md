@@ -193,8 +193,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/DataCrew-Agency/datacrew-cmp/issues)
-- **Website**: [datacrew.hu](https://datacrew.hu)
+- **Website**: [datacrew.agency](https://datacrew.agency)
 
 ---
 
-Made with ❤️ by [DataCrew Agency](https://datacrew.hu)
+Made with ❤️ by [DataCrew Agency](https://datacrew.agency)
