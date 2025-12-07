@@ -17,6 +17,12 @@
     /**
      * Configuration object - populated by GTM template
      */
+    // Wait for config if not present
+    if (!window.__dcCmpConfig) {
+        console.warn("DataCrew CMP: Config not found, waiting...");
+        return;
+    }
+
     var config = window.__dcCmpConfig || {
         cd: "",                  // Cookie domain (e.g., ".example.com")
         ce: 365,                 // Cookie expiry in days
