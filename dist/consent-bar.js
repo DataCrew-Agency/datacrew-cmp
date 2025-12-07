@@ -17,6 +17,10 @@
     /**
      * Configuration object - populated by GTM template
      */
+    // Prevent double execution
+    if (window.__dcCmpLoaded) return;
+    window.__dcCmpLoaded = true;
+
     // Wait for config if not present
     if (!window.__dcCmpConfig) {
         console.warn("DataCrew CMP: Config not found, waiting...");
