@@ -23,3 +23,7 @@ coverage/
 # Temporary files
 *.tmp
 *.temp
+
+# Local documentation (not for repo)
+CHANGELOG.md
+PROJECT_SUMMARY.md
