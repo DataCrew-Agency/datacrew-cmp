@@ -334,6 +334,7 @@
 
             // Mobile responsive styles
             "@media(max-width:768px){" +
+            ".dcb{left:0!important;right:0!important;bottom:0!important;top:auto!important;transform:none!important;width:100%!important;max-width:100%!important;border-radius:16px 16px 0 0!important}" +
             ".dcb:not(.dccv) .dcbt{flex-direction:row-reverse}" +
             ".dccts{max-height:50vh;overflow-y:auto;-webkit-overflow-scrolling:touch}" +
             "}";
