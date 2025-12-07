@@ -323,7 +323,7 @@
 
             // Mobile responsive styles
             "@media(max-width:768px){" +
-            ".dcbt{flex-direction:row-reverse}" +
+            ".dcb:not(.dccv) .dcbt{flex-direction:row-reverse}" +
             ".dccts{max-height:50vh;overflow-y:auto;-webkit-overflow-scrolling:touch}" +
             "}";
         
