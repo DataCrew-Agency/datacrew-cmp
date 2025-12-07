@@ -264,11 +264,10 @@
             ".dcf a{color:#999;text-decoration:none}" +
             ".dcf a:hover{text-decoration:underline}" +
             
-            // Mobile styles - all positions become bottom sheet
+            // Mobile styles - center position with smaller fonts
             "@media(max-width:600px){" +
-            ".dcb{top:auto!important;left:0!important;right:0!important;bottom:0!important;transform:none!important;width:100%!important;max-width:100%!important;border-radius:16px 16px 0 0!important;max-height:80vh!important}" +
-            ".dcb.dccv{max-width:100%!important}" +
-            ".dct{font-size:16px;padding:10px;border-radius:16px 16px 0 0!important}" +
+            ".dcb.dcp-center{top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important;width:95%!important;max-width:95%!important;max-height:85vh!important}" +
+            ".dct{font-size:16px;padding:10px}" +
             ".dctx{font-size:12px;padding:12px}" +
             ".dcbt{padding:10px 12px}" +
             ".dcbt button{padding:10px 14px;font-size:12px;flex:1;min-width:0}" +
@@ -333,14 +332,11 @@
         };
         wrapper.appendChild(overlay);
         
-        // Banner - with inline styles for mobile
+        // Banner - mobile always uses center position
         var mobile = isMobile();
-        var posClass = mobile ? "dcp-bottom" : "dcp-" + config.bp;
+        var posClass = mobile ? "dcp-center" : "dcp-" + config.bp;
         var banner = document.createElement("div");
         banner.className = "dcb " + posClass + (state.v === "c" ? " dccv" : "");
-        if (mobile) {
-            banner.style.cssText = "position:fixed;bottom:0;left:0;right:0;top:auto;transform:none;width:100%;max-width:100%;z-index:99999;";
-        }
         
         // Title
         var title = document.createElement("div");
@@ -423,11 +419,7 @@
         footer.innerHTML = '<a href="https://github.com/DataCrew-Agency/datacrew-cmp" target="_blank">Free CMP by DataCrew</a>';
         banner.appendChild(footer);
         
-        if (mobile) {
-            document.body.appendChild(banner);
-        } else {
-            wrapper.appendChild(banner);
-        }
+        wrapper.appendChild(banner);
         document.body.appendChild(wrapper);
 
         state.wr = wrapper;
