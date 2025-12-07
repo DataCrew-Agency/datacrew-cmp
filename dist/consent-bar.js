@@ -265,7 +265,8 @@
      * Inject CSS styles into the page
      */
     function injectStyles() {
-        if (document.getElementById("dcs")) return;
+        var existing = document.getElementById("dcs");
+        if (existing) existing.remove();
         
         var style = document.createElement("style");
         style.id = "dcs";
