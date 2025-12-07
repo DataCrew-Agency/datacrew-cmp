@@ -333,10 +333,14 @@
         };
         wrapper.appendChild(overlay);
         
-        // Banner inside wrapper
-        var posClass = isMobile() ? "dcp-bottom" : "dcp-" + config.bp;
+        // Banner - with inline styles for mobile
+        var mobile = isMobile();
+        var posClass = mobile ? "dcp-bottom" : "dcp-" + config.bp;
         var banner = document.createElement("div");
         banner.className = "dcb " + posClass + (state.v === "c" ? " dccv" : "");
+        if (mobile) {
+            banner.style.cssText = "position:fixed;bottom:0;left:0;right:0;top:auto;transform:none;width:100%;max-width:100%;z-index:99999;";
+        }
         
         // Title
         var title = document.createElement("div");
@@ -419,9 +423,13 @@
         footer.innerHTML = '<a href="https://github.com/DataCrew-Agency/datacrew-cmp" target="_blank">Free CMP by DataCrew</a>';
         banner.appendChild(footer);
         
-        wrapper.appendChild(banner);
+        if (mobile) {
+            document.body.appendChild(banner);
+        } else {
+            wrapper.appendChild(banner);
+        }
         document.body.appendChild(wrapper);
-        
+
         state.wr = wrapper;
         state.oe = overlay;
         state.be = banner;
@@ -472,6 +480,9 @@
 
     function hideBanner() {
         state.v = "i";
+        if (state.be) {
+            state.be.remove();
+        }
         if (state.wr) {
             state.wr.remove();
             state.wr = null;
