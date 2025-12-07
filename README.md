@@ -8,8 +8,10 @@ A free, lightweight, open-source Consent Management Platform (CMP) with full Goo
 - **Lightweight** - Minimal footprint, fast loading
 - **Customizable** - Colors, position, button styling, and more
 - **Multi-language** - Hungarian and English with auto-detection
-- **GDPR Compliant** - Proper consent collection and storage
+- **GDPR Compliant*** - Proper consent collection and storage
 - **Free & Open Source** - MIT License
+
+> **\* Legal Disclaimer:** DataCrew Kft. assumes no responsibility for any legal consequences arising from the use of this software. Consulting with a qualified data protection lawyer is essential to ensure proper implementation and compliance with applicable regulations.
 
 ## Supported Consent Types
 
@@ -182,7 +184,7 @@ The banner presents three categories to users:
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file.
+MIT License
 
 ## Contributing
 
