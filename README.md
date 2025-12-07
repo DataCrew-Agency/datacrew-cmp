@@ -1,199 +1,198 @@
-# DataCrew CMP - Free Consent Management Platform for GTM
+# DataCrew CMP - Consent Management Platform
 
-A lightweight, free, and fully customizable Consent Management Platform (CMP) implemented as a Google Tag Manager template. Fully compatible with Google Consent Mode v2.
+A free, lightweight, open-source Consent Management Platform (CMP) with full Google Consent Mode v2 support. Designed as a Google Tag Manager custom template for easy deployment.
 
 ## Features
 
-- ✅ **Google Consent Mode v2** compatible (including `ad_user_data` and `ad_personalization`)
-- ✅ **No external dependencies** - everything runs from the GTM template
-- ✅ **Fully customizable** - colors, texts, positioning
-- ✅ **Multi-language support** - configure your own translations
-- ✅ **GDPR compliant** - granular consent options
-- ✅ **Lightweight** - minimal impact on page performance
-- ✅ **Open source** - MIT licensed
+- **Google Consent Mode v2** - Full support for all consent types
+- **Lightweight** - Minimal footprint, fast loading
+- **Customizable** - Colors, position, button styling, and more
+- **Multi-language** - Hungarian and English with auto-detection
+- **GDPR Compliant** - Proper consent collection and storage
+- **Free & Open Source** - MIT License
 
-## Quick Start
+## Supported Consent Types
 
-### Option 1: Community Template Gallery (Recommended)
-1. In GTM, go to Templates → Search Gallery
-2. Search for "DataCrew CMP"
-3. Add to workspace
-4. Create a new tag using the template
+The following Google Consent Mode v2 consent types are managed:
 
-### Option 2: Manual Import
+- `ad_storage` - Controls storage for advertising purposes
+- `ad_user_data` - Controls sending user data to Google for advertising
+- `ad_personalization` - Controls personalized advertising (remarketing)
+- `analytics_storage` - Controls storage for analytics purposes
+
+## Installation
+
+### Option 1: Import Template in GTM
+
 1. Download `template.tpl` from this repository
-2. In GTM, go to Templates → Tag Templates → New
-3. Click the three dots menu → Import
+2. In Google Tag Manager, go to **Templates** > **Tag Templates** > **New**
+3. Click the three dots menu and select **Import**
 4. Select the downloaded `template.tpl` file
 5. Save the template
-6. Create a new tag using the template
+
+### Option 2: Community Template Gallery
+
+Coming soon - the template will be submitted to the GTM Community Template Gallery.
 
 ## Configuration
 
-### Basic Setup
-
-1. **Create the Consent Tag**
-   - Trigger: Consent Initialization - All Pages
-   - Configure your preferred settings
-
-2. **Default Consent State**
-   The template automatically sets default consent to `denied` for all categories:
-   - `analytics_storage`
-   - `ad_storage`
-   - `ad_user_data`
-   - `ad_personalization`
-   - `functionality_storage`
-   - `personalization_storage`
-   - `security_storage`
-
-3. **Consent Categories**
-   - **Necessary**: Always granted (security_storage)
-   - **Analytics**: analytics_storage
-   - **Marketing**: ad_storage, ad_user_data, ad_personalization
-   - **Functionality**: functionality_storage, personalization_storage
-
-### Customization Options
+### Appearance
 
 | Setting | Description | Default |
 |---------|-------------|---------|
-| Banner Position | top, bottom | bottom |
-| Primary Color | HEX color code | #3B82F6 |
-| Text Color | HEX color code | #1F2937 |
-| Background Color | HEX color code | #FFFFFF |
-| Cookie Name | Name for storing consent | datacrew_consent |
-| Cookie Duration | Days until expiry | 365 |
-| Banner Title | Main heading text | Cookie Settings |
-| Banner Description | Description text | Customizable |
-| Accept All Button | Button text | Accept All |
-| Reject All Button | Button text | Reject All |
-| Save Preferences | Button text | Save Preferences |
+| Color Mode | Solid or Gradient | Gradient |
+| Primary Color | Main color (HEX) | #FA4716 |
+| Secondary Color | Gradient end color (HEX) | #FA6212 |
+| Banner Position | Center, Bottom, or Bottom Left | Center |
+| Show Overlay | Background overlay behind banner | Enabled |
 
-## How It Works
+### Button Styling
 
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Primary Button CSS Class | Custom class for accept buttons | (empty) |
+| Secondary Button CSS Class | Custom class for other buttons | (empty) |
+
+### Cookie Settings
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Cookie Domain | Domain for cookie (e.g., .example.com) | (current domain) |
+| Cookie Expiry | Days until cookie expires | 365 |
+
+### Default Consent State
+
+Configure the default state for each consent type before user interaction:
+
+| Setting | Options | Default |
+|---------|---------|---------|
+| ad_storage | denied / granted | denied |
+| ad_user_data | denied / granted | denied |
+| ad_personalization | denied / granted | denied |
+| analytics_storage | denied / granted | denied |
+| Wait for Update | Wait for user consent before firing tags | Enabled |
+| Wait Timeout | Milliseconds to wait | 500 |
+
+### DataLayer Events
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Fire 'cookie_consent_update' | Fires on every page load with existing consent and after user consent | Enabled |
+| Fire 'first_cookie_consent_update' | Fires only once immediately after first consent | Disabled |
+
+### Advanced
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| API Object Name | Global JavaScript object name | DataCrewConsent |
+| ads_data_redaction | Redact ad click IDs when denied | Enabled |
+| url_passthrough | Pass ad click info via URL | Disabled |
+
+## Cookie Format
+
+Consent is stored in a cookie named `datacrew-consent` with the following format:
+
+```json
+["statistics","marketing"]
 ```
-Page Load
-    ↓
-GTM Consent Initialization Trigger fires
-    ↓
-DataCrew CMP Tag executes
-    ↓
-Check for existing consent cookie
-    ↓
-┌─────────────────────────────────────┐
-│ Cookie exists?                       │
-│   YES → Apply saved consent state    │
-│   NO  → Show consent banner          │
-└─────────────────────────────────────┘
-    ↓
-User interacts with banner
-    ↓
-Update consent state via gtag()
-    ↓
-Save to cookie
-    ↓
-GTM triggers fire based on consent
-```
 
-## Consent Mode Integration
+Only granted categories are included in the array. An empty array `[]` means all optional categories were denied.
 
-The template integrates with GTM's built-in Consent Mode:
+## JavaScript API
+
+The CMP exposes a JavaScript API for programmatic control:
 
 ```javascript
-// Default state (on page load)
-gtag('consent', 'default', {
-  'analytics_storage': 'denied',
-  'ad_storage': 'denied',
-  'ad_user_data': 'denied',
-  'ad_personalization': 'denied',
-  'functionality_storage': 'denied',
-  'personalization_storage': 'denied',
-  'security_storage': 'granted',
-  'wait_for_update': 500
-});
+// Show consent banner (initial view)
+DataCrewConsent.show();
 
-// After user consent
-gtag('consent', 'update', {
-  'analytics_storage': 'granted',
-  'ad_storage': 'granted',
-  // ... based on user selection
-});
+// Show consent banner with customization view
+DataCrewConsent.show(true);
+
+// Hide consent banner
+DataCrewConsent.hide();
+
+// Reopen consent settings (for "manage cookies" links)
+DataCrewConsent.revisitConsent();
+
+// Clear consent and show banner again
+DataCrewConsent.clearConsent();
+
+// Get current consent state
+DataCrewConsent.getConsent();
+// Returns: { ad_storage: "granted", analytics_storage: "denied", ... }
+
+// Check if consent has been given
+DataCrewConsent.hasConsent();
+// Returns: true/false
+
+// Change language
+DataCrewConsent.setLanguage('hu'); // or 'en'
+
+// Get current language
+DataCrewConsent.getLanguage();
+// Returns: 'hu' or 'en'
 ```
 
-## Development
+### Example: "Manage Cookies" Link
 
-### Project Structure
-
-```
-datacrew_cmp/
-├── README.md
-├── LICENSE
-├── CHANGELOG.md
-├── template.tpl              # Main GTM template file
-├── metadata.yaml             # Community Gallery metadata
-├── src/
-│   ├── consent-bar.js        # Consent bar UI & logic
-│   ├── consent-bar.css       # Styles
-│   └── template-logic.js     # Sandboxed JS for GTM
-├── test/
-│   ├── test.html             # Standalone test page
-│   └── gtm-test-container.json
-├── docs/
-│   ├── setup-guide.md
-│   └── screenshots/
-└── build/
-    └── build.js              # Build script
+```html
+<a href="#" onclick="DataCrewConsent.revisitConsent(); return false;">
+  Manage Cookie Settings
+</a>
 ```
 
-### Building
+## DataLayer Events
 
-```bash
-npm install
-npm run build
+When enabled, the following events are pushed to the dataLayer:
+
+### cookie_consent_update
+
+Fired on every page load (when consent exists) and immediately after user gives consent:
+
+```javascript
+{
+  event: "cookie_consent_update",
+  consent_analytics: "granted", // or "denied"
+  consent_marketing: "granted"  // or "denied"
+}
 ```
 
-This will generate the final `template.tpl` from source files.
+### first_cookie_consent_update
 
-### Testing
+Fired only once, immediately after user gives consent for the first time:
 
-1. **Standalone testing** (without GTM):
-   Open `test/test.html` in a browser
+```javascript
+{
+  event: "first_cookie_consent_update",
+  consent_analytics: "granted", // or "denied"
+  consent_marketing: "granted"  // or "denied"
+}
+```
 
-2. **GTM testing**:
-   - Import `template.tpl` into GTM
-   - Use Preview mode
-   - Check browser console for consent state changes
+## Consent Categories
 
-## Browser Support
+The banner presents three categories to users:
 
-- Chrome 60+
-- Firefox 55+
-- Safari 12+
-- Edge 79+
-
-## Contributing
-
-Contributions are welcome! Please read our contributing guidelines before submitting PRs.
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests
-5. Submit a pull request
+| Category | Consent Types Affected |
+|----------|----------------------|
+| Necessary (always on) | - |
+| Statistics | analytics_storage |
+| Marketing | ad_storage, ad_user_data, ad_personalization |
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License - see [LICENSE](LICENSE) file.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Support
 
-- 📖 [Documentation](docs/setup-guide.md)
-- 🐛 [Issue Tracker](https://github.com/datacrew/datacrew-cmp/issues)
-- 💬 [Discussions](https://github.com/datacrew/datacrew-cmp/discussions)
-
-## Credits
-
-Created and maintained by [DataCrew Kft.](https://datacrew.hu)
+- **Issues**: [GitHub Issues](https://github.com/DataCrew-Agency/datacrew-cmp/issues)
+- **Website**: [datacrew.hu](https://datacrew.hu)
 
 ---
 
-⭐ If you find this useful, please star the repository!
+Made with ❤️ by [DataCrew Agency](https://datacrew.hu)

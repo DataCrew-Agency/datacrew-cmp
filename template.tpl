@@ -8,8 +8,7 @@ ___INFO___
   "displayName": "DataCrew CMP - Consent Management",
   "brand": {
     "id": "datacrew",
-    "displayName": "DataCrew",
-    "thumbnail": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAADaklEQVR4nO2ZW4hNURjHf2MYl1wSuZQHLyIPeJAHkTy4vEhK8qBckksu5cFl8OJS4kEeJJcHpCQPLi+SB5cXISTXKJfBOGbG+LXW2Wf2nH322XvtM3Nmzv7X02z2d/n+e6+11l4bUqRIkSJFihQp/g8UAiuAI8B14DXwDmgG2oCvwAfgMXAHuAYcBVYChT2VeCowFjgNvAHa8ccP4CZwEBgXd+LCYC9wF/gVYeKdoQU4D+TGkXwRcCvG5DtDE3AEyEhW8unAUYKbJZHoAs4CyxKd/Ayg1mfyTcBxYBSwQ63wCEAzsMabRB8/k58MnAJqIiZfDRQBdxKYfCuwLGLyM4FVwN0EJl8DbIuY/DRgPVCZwOSrgLMRk58ArAYeJjD5a8DxCMn3BTYAD0I+qwK4EkHyqcBGoDbkszLgUoTJZwIbgYaQzyqBSxGSHwJsBhpDPisHLkdIfhiwBWgK+ewpcClC8rW7gKaQz8qASxGSnwBsB5pDPnsJXI6Q/GRgJ9AS8tlz4HKE5GcAe4C2kM+eAVfCkh8AbAW+hHxWAlyNkPxsYB/wLeSzx8C1sOQHApuATyGfPQKuh83EPGAj8D7gs4fA9bCZWAAUAx8CPrsP3AhLfhGwDnjr89k94GZY8muApcArn8/uALfCkl8PrACafT67DdwOS349sA5o8fmsArgTlvwmYCXQ6vPZTeBuWPKbgDVAm89nN4B7YclvAdYCnT6fXQceREl+O7AO6PL57BrwIEryO4H1QLfPZ1eBh1GS3w2sB372+OwK8ChK8vuBjcCvHp9dAh5HSf4AsAno9vnsIvAkSvJHgM1Az9vIi8DTKJ9VBJbQPX5OTqWEJd8AnIqQ/P+GKAUupwNb6R4fp4RSYU0cNYUldwlY3sOyfxqW3GVgZQ8m/xRYFeKzS8CakM8qgXVhyV0BNvRg8k+BTWHJXQU2h3xWAWwJS74K2BI2eVcNTCX43lwBbIuQ/PW0T7uJ1WkfARG4AeyIkPzNtP9A4vJwE7gnQvK30v7s/xJgbdpf/ufhNnBfhOTvpP3Rfx7uAQ9ESP5e2h/9y3EOHkZI/n7an/zL8RgeRUj+Qdof/A9FccIjeBIh+Udpf+6/Hy+Bp0M+e5r2x/59cYIzeBYh+adp/61/rEoRANXAc+AXUaPtfALYR7UgAAAASUVORK5CYII="
+    "displayName": "DataCrew"
   },
   "description": "Free, lightweight Consent Management Platform with Google Consent Mode v2 support.",
   "containerContexts": [
@@ -302,6 +301,30 @@ ___TEMPLATE_PARAMETERS___
   },
   {
     "type": "GROUP",
+    "name": "eventsGroup",
+    "displayName": "DataLayer Events",
+    "groupStyle": "ZIPPY_CLOSED",
+    "subParams": [
+      {
+        "type": "CHECKBOX",
+        "name": "enableConsentUpdateEvent",
+        "checkboxText": "Fire 'cookie_consent_update' event",
+        "simpleValueType": true,
+        "defaultValue": true,
+        "help": "Fires on every page load when consent exists and immediately after user gives consent."
+      },
+      {
+        "type": "CHECKBOX",
+        "name": "enableFirstConsentEvent",
+        "checkboxText": "Fire 'first_cookie_consent_update' event",
+        "simpleValueType": true,
+        "defaultValue": false,
+        "help": "Fires only once, immediately after user gives consent for the first time (before page reload)."
+      }
+    ]
+  },
+  {
+    "type": "GROUP",
     "name": "advancedGroup",
     "displayName": "Advanced",
     "groupStyle": "ZIPPY_CLOSED",
@@ -344,6 +367,7 @@ const makeNumber = require('makeNumber');
 const gtagSet = require('gtagSet');
 const setInWindow = require('setInWindow');
 const injectScript = require('injectScript');
+const decodeUriComponent = require('decodeUriComponent');
 
 var colorMode = data.colorMode || 'gradient';
 var primaryColor = data.primaryColor || '#FA4716';
@@ -361,6 +385,8 @@ var waitForUpdateMs = makeNumber(data.waitForUpdateMs) || 500;
 var globalObjectName = data.globalObjectName || 'DataCrewConsent';
 var adsDataRedaction = data.adsDataRedaction !== false;
 var urlPassthrough = data.urlPassthrough === true;
+var enableConsentUpdateEvent = data.enableConsentUpdateEvent !== false;
+var enableFirstConsentEvent = data.enableFirstConsentEvent === true;
 
 var colorStyle = colorMode === 'gradient' 
   ? 'linear-gradient(135deg, ' + primaryColor + ' 0%, ' + secondaryColor + ' 100%)'
@@ -384,21 +410,15 @@ gtagSet('url_passthrough', urlPassthrough);
 var cookieName = 'datacrew-consent';
 var existingConsent = getCookieValues(cookieName);
 if (existingConsent && existingConsent.length > 0) {
-  var parsed = JSON.parse(existingConsent[0]);
-  if (parsed) {
-    var hasMarketing = false;
-    var hasStatistics = false;
-    if (parsed.indexOf) {
-      hasMarketing = parsed.indexOf('marketing') > -1;
-      hasStatistics = parsed.indexOf('statistics') > -1;
-    }
-    updateConsentState({
-      'ad_storage': hasMarketing ? 'granted' : 'denied',
-      'ad_user_data': hasMarketing ? 'granted' : 'denied',
-      'ad_personalization': hasMarketing ? 'granted' : 'denied',
-      'analytics_storage': hasStatistics ? 'granted' : 'denied'
-    });
-  }
+  var cookieValue = decodeUriComponent(existingConsent[0]);
+  var hasMarketing = cookieValue.indexOf('marketing') > -1;
+  var hasStatistics = cookieValue.indexOf('statistics') > -1;
+  updateConsentState({
+    'ad_storage': hasMarketing ? 'granted' : 'denied',
+    'ad_user_data': hasMarketing ? 'granted' : 'denied',
+    'ad_personalization': hasMarketing ? 'granted' : 'denied',
+    'analytics_storage': hasStatistics ? 'granted' : 'denied'
+  });
 }
 
 var config = {
@@ -414,12 +434,14 @@ var config = {
   lm: languageMode,
   go: globalObjectName,
   adr: adsDataRedaction,
-  up: urlPassthrough
+  up: urlPassthrough,
+  fcu: enableFirstConsentEvent,
+  ccu: enableConsentUpdateEvent
 };
 
 setInWindow('__dcCmpConfig', config, true);
 
-injectScript('https://cdn.jsdelivr.net/gh/DataCrew-Agency/datacrew-cmp@bd4e0a7/dist/consent-bar.min.js', data.gtmOnSuccess, data.gtmOnFailure, 'dataCrewCMP');
+injectScript('https://cdn.jsdelivr.net/gh/DataCrew-Agency/datacrew-cmp@aca1dcf/dist/consent-bar.min.js', data.gtmOnSuccess, data.gtmOnFailure, 'dataCrewCMP');
 
 
 ___WEB_PERMISSIONS___
@@ -599,7 +621,7 @@ ___WEB_PERMISSIONS___
             "listItem": [
               {
                 "type": 1,
-                "string": "https://cdn.jsdelivr.net/gh/DataCrew-Agency/datacrew-cmp@bd4e0a7/*"
+                "string": "https://cdn.jsdelivr.net/gh/DataCrew-Agency/datacrew-cmp@aca1dcf/*"
               }
             ]
           }
