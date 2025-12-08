@@ -441,7 +441,7 @@ var config = {
 
 setInWindow('__dcCmpConfig', config, true);
 
-injectScript('https://cdn.jsdelivr.net/gh/DataCrew-Agency/datacrew-cmp@e0f50f0a93d55d51b4686ce5c13eb586f78838d5/dist/consent-bar.min.js', data.gtmOnSuccess, data.gtmOnFailure, 'dataCrewCMP');
+injectScript('https://cdn.jsdelivr.net/gh/DataCrew-Agency/datacrew-cmp@e4070a89cf6656818520b275b8a69d8f9ceef342/dist/consent-bar.min.js', data.gtmOnSuccess, data.gtmOnFailure, 'dataCrewCMP');
 
 
 ___WEB_PERMISSIONS___
