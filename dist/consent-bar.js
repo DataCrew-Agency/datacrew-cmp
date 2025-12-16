@@ -286,8 +286,11 @@
         gtag("consent", "update", consentState);
         gtag("set", "ads_data_redaction", preferences.m ? false : config.adr);
         gtag("set", "url_passthrough", false);
-        
+
         pushConsentEvent(consentState, true);
+
+        // Update cross-domain links with new consent values
+        decorateLinksWithConsent();
     }
 
     // ===========================================
