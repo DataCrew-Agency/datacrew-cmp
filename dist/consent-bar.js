@@ -189,8 +189,8 @@
         gtag("set", "ads_data_redaction", cdConsent.marketing ? false : config.adr);
         gtag("set", "url_passthrough", false);
 
-        // Fire consent event
-        pushConsentEvent(consentState, false);
+        // Fire consent event (isFirst=true to trigger first_cookie_consent_update)
+        pushConsentEvent(consentState, true);
     }
 
     function decorateLinksWithConsent() {
