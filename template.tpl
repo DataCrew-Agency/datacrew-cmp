@@ -355,6 +355,37 @@ ___TEMPLATE_PARAMETERS___
         "help": "When enabled, ad click info is passed through URL parameters. Automatically set to false when consent is given."
       }
     ]
+  },
+  {
+    "type": "GROUP",
+    "name": "crossDomainGroup",
+    "displayName": "Cross-Domain Consent",
+    "groupStyle": "ZIPPY_CLOSED",
+    "subParams": [
+      {
+        "type": "CHECKBOX",
+        "name": "enableCrossDomain",
+        "checkboxText": "Enable cross-domain consent sharing",
+        "simpleValueType": true,
+        "defaultValue": false,
+        "help": "When enabled, consent preferences will be passed to specified domains via URL parameters (dc_statistics, dc_marketing) on links. Incoming consent from URL parameters will also be processed."
+      },
+      {
+        "type": "TEXT",
+        "name": "crossDomainHosts",
+        "displayName": "Target Hostnames",
+        "simpleValueType": true,
+        "defaultValue": "",
+        "help": "Comma-separated list of hostnames to share consent with (e.g., shop.example.com, blog.example.com). The current domain is automatically excluded.",
+        "enablingConditions": [
+          {
+            "paramName": "enableCrossDomain",
+            "paramValue": true,
+            "type": "EQUALS"
+          }
+        ]
+      }
+    ]
   }
 ]
 
@@ -389,6 +420,8 @@ var adsDataRedaction = data.adsDataRedaction !== false;
 var urlPassthrough = data.urlPassthrough === true;
 var enableConsentUpdateEvent = data.enableConsentUpdateEvent !== false;
 var enableFirstConsentEvent = data.enableFirstConsentEvent === true;
+var enableCrossDomain = data.enableCrossDomain === true;
+var crossDomainHosts = data.crossDomainHosts || '';
 
 var colorStyle = colorMode === 'gradient' 
   ? 'linear-gradient(135deg, ' + primaryColor + ' 0%, ' + secondaryColor + ' 100%)'
@@ -438,7 +471,9 @@ var config = {
   adr: adsDataRedaction,
   up: urlPassthrough,
   fcu: enableFirstConsentEvent,
-  ccu: enableConsentUpdateEvent
+  ccu: enableConsentUpdateEvent,
+  xd: enableCrossDomain ? 1 : 0,
+  xdh: crossDomainHosts
 };
 
 setInWindow('__dcCmpConfig', config, true);

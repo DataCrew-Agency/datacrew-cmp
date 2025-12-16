@@ -146,6 +146,103 @@
     }
 
     // ===========================================
+    // CROSS-DOMAIN CONSENT FUNCTIONS
+    // ===========================================
+
+    function getUrlParam(name) {
+        var params = new URLSearchParams(window.location.search);
+        return params.get(name);
+    }
+
+    function checkCrossDomainConsent() {
+        if (!config.xd || !config.xdh) return null;
+
+        var dcStatistics = getUrlParam('dc_statistics');
+        var dcMarketing = getUrlParam('dc_marketing');
+
+        if (dcStatistics === null && dcMarketing === null) return null;
+
+        return {
+            statistics: dcStatistics === 'true',
+            marketing: dcMarketing === 'true'
+        };
+    }
+
+    function applyCrossDomainConsent(cdConsent) {
+        // Save to cookie
+        var categories = [];
+        if (cdConsent.statistics) categories.push("statistics");
+        if (cdConsent.marketing) categories.push("marketing");
+        setCookie(cookieName, encodeURIComponent(JSON.stringify(categories)), config.ce);
+
+        // Update consent state via dataLayer
+        var consentState = {
+            ad_storage: cdConsent.marketing ? "granted" : "denied",
+            ad_user_data: cdConsent.marketing ? "granted" : "denied",
+            ad_personalization: cdConsent.marketing ? "granted" : "denied",
+            analytics_storage: cdConsent.statistics ? "granted" : "denied"
+        };
+
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { window.dataLayer.push(arguments); }
+        gtag("consent", "update", consentState);
+        gtag("set", "ads_data_redaction", cdConsent.marketing ? false : config.adr);
+        gtag("set", "url_passthrough", false);
+
+        // Fire consent event
+        pushConsentEvent(consentState, false);
+    }
+
+    function decorateLinksWithConsent() {
+        if (!config.xd || !config.xdh) return;
+
+        var targetHosts = config.xdh.split(',').map(function(h) {
+            return h.trim().toLowerCase();
+        }).filter(function(h) { return h.length > 0; });
+
+        if (targetHosts.length === 0) return;
+
+        var currentHost = window.location.hostname.toLowerCase();
+        var cookie = getCookie(cookieName);
+
+        var hasStatistics = false;
+        var hasMarketing = false;
+
+        if (cookie) {
+            try {
+                var arr = JSON.parse(decodeURIComponent(cookie));
+                if (Array.isArray(arr)) {
+                    hasStatistics = arr.indexOf("statistics") > -1;
+                    hasMarketing = arr.indexOf("marketing") > -1;
+                }
+            } catch (e) {}
+        }
+
+        var links = document.querySelectorAll('a[href]');
+        links.forEach(function(link) {
+            try {
+                var url = new URL(link.href, window.location.origin);
+                var linkHost = url.hostname.toLowerCase();
+
+                // Skip current domain links
+                if (linkHost === currentHost) return;
+
+                // Check if link points to a target host
+                var isTargetHost = targetHosts.some(function(targetHost) {
+                    return linkHost === targetHost || linkHost.endsWith('.' + targetHost);
+                });
+
+                if (!isTargetHost) return;
+
+                // Add/update consent parameters
+                url.searchParams.set('dc_statistics', hasStatistics ? 'true' : 'false');
+                url.searchParams.set('dc_marketing', hasMarketing ? 'true' : 'false');
+                link.href = url.toString();
+            } catch (e) {}
+        });
+    }
+
+    // ===========================================
     // CONSENT EVENT HANDLING
     // ===========================================
 
@@ -555,13 +652,28 @@
     // ===========================================
 
     (function init() {
-        if (!hasConsent()) {
+        // Check for cross-domain consent from URL parameters
+        var cdConsent = checkCrossDomainConsent();
+
+        if (cdConsent !== null) {
+            // Apply cross-domain consent - no banner shown
+            applyCrossDomainConsent(cdConsent);
+        } else if (!hasConsent()) {
             state.rv = 0;
             createBanner();
         } else {
             var existing = getConsentPreferences();
             if (existing) {
                 pushConsentEvent(existing, false);
+            }
+        }
+
+        // Decorate outbound links (only after DOM ready)
+        if (config.xd && config.xdh) {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', decorateLinksWithConsent);
+            } else {
+                decorateLinksWithConsent();
             }
         }
     })();
