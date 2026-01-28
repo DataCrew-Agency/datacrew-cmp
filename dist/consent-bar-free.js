@@ -1,9 +1,10 @@
 /**
- * DataCrew CMP - Consent Management Platform
+ * DataCrew CMP - Free Consent Management Platform
  * https://github.com/DataCrew-Agency/datacrew-cmp
- * 
+ *
  * Free, lightweight Consent Management Platform with Google Consent Mode v2 support.
- * 
+ * Hungarian language only - Free version
+ *
  * MIT License - DataCrew Agency (https://datacrew.agency)
  */
 
@@ -23,18 +24,19 @@
     // ===========================================
     // CONFIGURATION
     // ===========================================
-    
+
     var config = window.__dcCmpConfig;
     var cookieName = "datacrew-consent";
 
     // ===========================================
-    // TRANSLATIONS
+    // TRANSLATIONS (Hungarian only)
     // ===========================================
 
     var translations = {
         hu: {
             t: "Ez a weboldal sütiket használ.",
-            d: 'A böngészési élmény fokozása, a személyre szabott hirdetések vagy tartalmak megjelenítése, valamint a forgalom elemzése érdekében sütiket (cookie) használunk. A "Minden elfogadása" gombra kattintva hozzájárulhat a legjobb böngészési élményt biztosító sütik használatához is. További információt az <a href="' + config.pp + '" target="_blank">adatvédelmi nyilatkozatunkban</a> és a <a href="https://business.safety.google/privacy/" target="_blank">Google adatvédelmi szabályzatában</a> talál.',
+            d: 'A böngészési élmény fokozása, a személyre szabott hirdetések vagy tartalmak megjelenítése, valamint a forgalom elemzése érdekében sütiket (cookie) használunk. A "Minden elfogadása" gombra kattintva hozzájárulhat a legjobb böngészési élményt biztosító sütik használatához is. További információt az <a href="{PP_URL}" target="_blank">adatvédelmi nyilatkozatunkban</a> és a <a href="https://business.safety.google/privacy/" target="_blank">Google adatvédelmi szabályzatában</a> talál.',
+            d2: 'A böngészési élmény fokozása, a személyre szabott hirdetések vagy tartalmak megjelenítése, valamint a forgalom elemzése érdekében sütiket (cookie) használunk. A "Minden elfogadása" gombra kattintva hozzájárulhat a legjobb böngészési élményt biztosító sütik használatához is. További információt a <a href="https://business.safety.google/privacy/" target="_blank">Google adatvédelmi szabályzatában</a> talál.',
             aa: "Minden elfogadása",
             c: "Testreszabás",
             os: "Csak kiválasztottak",
@@ -45,20 +47,6 @@
             ad: "Az adatok névtelen formában való gyűjtésén és jelentésén keresztül a statisztikai sütik segítenek a weboldal tulajdonosának abban, hogy megértse, hogyan lépnek interakcióba a látogatók a weboldallal.",
             m: "Marketing",
             md: "A hirdetési sütiket arra használják, hogy a látogatókat személyre szabott hirdetésekkel juttassák el a korábban meglátogatott oldalak alapján, és elemezzék a hirdetési kampány hatékonyságát."
-        },
-        en: {
-            t: "This website uses cookies.",
-            d: 'We use cookies to enhance your browsing experience, display personalized ads or content, and analyze our traffic. By clicking "Accept All", you consent to the use of cookies that provide the best browsing experience. For more information, please see our <a href="' + config.pp + '" target="_blank">Privacy Policy</a> and <a href="https://business.safety.google/privacy/" target="_blank">Google Privacy Policy</a>.',
-            aa: "Accept All",
-            c: "Customize",
-            os: "Save Selected",
-            ra: "Reject All",
-            n: "Necessary",
-            nd: "Necessary cookies help make the website usable by enabling basic functions like page navigation and access to secure areas of the website. The website cannot function properly without these cookies.",
-            a: "Analytics",
-            ad: "Analytics cookies help website owners understand how visitors interact with websites by collecting and reporting information anonymously.",
-            m: "Marketing",
-            md: "Marketing cookies are used to track visitors across websites to display relevant advertisements based on previously visited pages and analyze advertising campaign effectiveness."
         }
     };
 
@@ -68,7 +56,7 @@
 
     var state = {
         v: "i",              // View: "i" = initial, "c" = customize
-        l: getLanguage(),    // Current language
+        l: "hu",             // Current language (always Hungarian in free version)
         ac: 0,               // Analytics consent (0 = off, 1 = on)
         mc: 0,               // Marketing consent (0 = off, 1 = on)
         rv: 0,               // Revisit mode (0 = first visit, 1 = revisit)
@@ -82,15 +70,21 @@
     // ===========================================
 
     function getLanguage() {
-        if (config.lm !== "auto") {
-            return config.lm;
-        }
-        var browserLang = navigator.language || "hu";
-        return browserLang.indexOf("en") === 0 ? "en" : "hu";
+        // Free version: always Hungarian
+        return "hu";
     }
 
     function t(key) {
-        return translations[state.l][key] || key;
+        return translations.hu[key] || key;
+    }
+
+    function getPrivacyPolicyUrl() {
+        // Free version: only Hungarian URL or default
+        var url = config.ppHu;
+        if (!url || url.trim() === "") {
+            url = config.ppDf || "/privacy-policy/";
+        }
+        return url;
     }
 
     function getCookie(name) {
@@ -106,9 +100,9 @@
         var expires = new Date();
         expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
         var domain = config.cd ? "; domain=" + config.cd : "";
-        document.cookie = name + "=" + value + 
-            "; expires=" + expires.toUTCString() + 
-            "; path=/" + domain + 
+        document.cookie = name + "=" + value +
+            "; expires=" + expires.toUTCString() +
+            "; path=/" + domain +
             "; secure; samesite=lax";
     }
 
@@ -124,7 +118,7 @@
     function getConsentPreferences() {
         var cookie = getCookie(cookieName);
         if (!cookie) return null;
-        
+
         try {
             var arr = JSON.parse(decodeURIComponent(cookie));
             if (Array.isArray(arr)) {
@@ -183,11 +177,19 @@
             analytics_storage: cdConsent.statistics ? "granted" : "denied"
         };
 
+        // Default behavior - use gtag consent commands (no integrations in free version)
         window.dataLayer = window.dataLayer || [];
         function gtag() { window.dataLayer.push(arguments); }
         gtag("consent", "update", consentState);
-        gtag("set", "ads_data_redaction", cdConsent.marketing ? false : config.adr);
-        gtag("set", "url_passthrough", false);
+
+        // ads_data_redaction: only if not "notset"
+        if (config.adr !== 'notset') {
+            gtag("set", "ads_data_redaction", cdConsent.marketing ? false : config.adr === 'true');
+        }
+        // url_passthrough: only if not "notset"
+        if (config.up !== 'notset') {
+            gtag("set", "url_passthrough", cdConsent.marketing ? false : config.up === 'true');
+        }
 
         // Fire consent event (isFirst=true to trigger first_cookie_consent_update)
         pushConsentEvent(consentState, true);
@@ -248,7 +250,7 @@
 
     function pushConsentEvent(consentState, isFirst) {
         window.dataLayer = window.dataLayer || [];
-        
+
         if (config.fcu && isFirst) {
             window.dataLayer.push({
                 event: "first_cookie_consent_update",
@@ -256,7 +258,7 @@
                 consent_marketing: consentState.ad_storage
             });
         }
-        
+
         if (config.ccu) {
             window.dataLayer.push({
                 event: "cookie_consent_update",
@@ -270,22 +272,30 @@
         var categories = [];
         if (preferences.a) categories.push("statistics");
         if (preferences.m) categories.push("marketing");
-        
+
         setCookie(cookieName, encodeURIComponent(JSON.stringify(categories)), config.ce);
-        
+
         var consentState = {
             ad_storage: preferences.m ? "granted" : "denied",
             ad_user_data: preferences.m ? "granted" : "denied",
             ad_personalization: preferences.m ? "granted" : "denied",
             analytics_storage: preferences.a ? "granted" : "denied"
         };
-        
+
+        // Default behavior - use gtag consent commands (no integrations in free version)
         window.dataLayer = window.dataLayer || [];
         function gtag() { window.dataLayer.push(arguments); }
-        
+
         gtag("consent", "update", consentState);
-        gtag("set", "ads_data_redaction", preferences.m ? false : config.adr);
-        gtag("set", "url_passthrough", false);
+
+        // ads_data_redaction: only if not "notset"
+        if (config.adr !== 'notset') {
+            gtag("set", "ads_data_redaction", preferences.m ? false : config.adr === 'true');
+        }
+        // url_passthrough: only if not "notset"
+        if (config.up !== 'notset') {
+            gtag("set", "url_passthrough", preferences.m ? false : config.up === 'true');
+        }
 
         pushConsentEvent(consentState, true);
 
@@ -300,7 +310,7 @@
     function injectStyles() {
         var existing = document.getElementById("dcs");
         if (existing) existing.remove();
-        
+
         var style = document.createElement("style");
         style.id = "dcs";
 
@@ -315,55 +325,55 @@
 
             // Banner - fixed position
             ".dcb{position:fixed;font-family:system-ui,sans-serif;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,0.15);display:flex;flex-direction:column;box-sizing:border-box;z-index:99999}" +
-            
+
             // Center position (desktop)
             ".dcb.dcp-center{top:50%;left:50%;transform:translate(-50%,-50%);max-width:560px;width:90%;max-height:85vh;border-radius:16px}" +
-            
+
             // Bottom position (desktop)
             ".dcb.dcp-bottom{bottom:0;left:0;right:0;width:100%;max-height:85vh;border-radius:16px 16px 0 0}" +
-            
+
             // Bottom left position (desktop)
             ".dcb.dcp-bottomleft{bottom:20px;left:20px;max-width:400px;width:calc(100% - 40px);max-height:85vh;border-radius:12px}" +
-            
+
             // Customize view wider
             ".dcb.dccv{max-width:640px}" +
-            
+
             // Title - fixed at top
             ".dct{background:" + config.cs + ";color:#fff;text-align:center;font-size:18px;padding:12px;margin:0;font-weight:700;flex-shrink:0;border-radius:16px 16px 0 0}" +
             ".dcp-bottom .dct,.dcp-bottomleft .dct{border-radius:16px 16px 0 0}" +
-            
+
             // Scrollable content wrapper
             ".dcsc{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}" +
-            
+
             // Description
             ".dctx{font-size:13px;padding:16px;color:#333;margin:0;line-height:1.5}" +
             ".dctx a{color:" + config.pc + ";text-decoration:underline}" +
-            
+
             // Buttons - fixed at bottom
             ".dcbt{display:flex;justify-content:center;gap:8px;padding:12px 16px;flex-wrap:wrap;flex-shrink:0;background:#fff}" +
-            ".dcbt button{border:none;padding:10px 18px;font-size:13px;cursor:pointer;border-radius:6px;font-weight:600}" +
-            ".dcpb{background:" + config.cs + ";color:#fff}" +
-            ".dcsb{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}" +
-            
+            ".dcbt button{border:none!important;padding:10px 18px!important;font-size:13px!important;cursor:pointer!important;border-radius:6px!important;font-weight:600!important}" +
+            ".dcbt button.dcpb{background:" + config.cs + "!important;color:#fff!important}" +
+            ".dcbt button.dcsb{background:#f3f4f6!important;color:#374151!important;border:1px solid #d1d5db!important}" +
+
             // Categories
             ".dccts{padding:0 16px 12px}" +
             ".dcct{display:flex;justify-content:space-between;align-items:flex-start;padding:12px;margin-bottom:8px;border-radius:8px;background:#f8f8f8}" +
             ".dcci{flex:1;padding-right:12px}" +
             ".dcctt{font-size:14px;font-weight:600;color:#333;margin:0 0 4px}" +
             ".dccd{font-size:12px;color:#666;margin:0;line-height:1.4}" +
-            
+
             // Toggle switch
-            ".dci{width:44px;height:24px;min-width:44px;appearance:none;background:#ccc;border-radius:24px;position:relative;cursor:pointer;transition:.2s;margin-top:2px}" +
-            ".dci:checked{background:" + config.cs + "}" +
-            ".dci::after{content:'';position:absolute;width:20px;height:20px;left:2px;top:2px;background:#fff;border-radius:50%;transition:.2s}" +
-            ".dci:checked::after{left:22px}" +
-            ".dci:disabled{opacity:.6;cursor:not-allowed}" +
-            
+            ".dci{width:44px!important;height:24px!important;min-width:44px!important;appearance:none!important;background:#ccc!important;border-radius:24px!important;position:relative!important;cursor:pointer!important;transition:.2s;margin-top:2px}" +
+            ".dci:checked{background:" + config.cs + "!important}" +
+            ".dci::after{content:''!important;position:absolute!important;width:20px!important;height:20px!important;left:2px!important;top:2px!important;background:#fff!important;border-radius:50%!important;transition:.2s}" +
+            ".dci:checked::after{left:22px!important}" +
+            ".dci:disabled{opacity:.6!important;cursor:not-allowed!important}" +
+
             // Footer
             ".dcf{text-align:right;padding:0 16px 10px;font-size:10px;color:#999;flex-shrink:0}" +
             ".dcf a{color:#999;text-decoration:none}" +
             ".dcf a:hover{text-decoration:underline}" +
-            
+
             // Mobile - vertical layout
             "@media(max-width:600px){" +
             ".dcb{top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;transform:translate(-50%,-50%)!important;width:calc(100% - 32px)!important;max-width:360px!important;max-height:90vh!important;border-radius:16px!important;box-sizing:border-box!important}" +
@@ -371,7 +381,7 @@
             ".dctx{font-size:13px;padding:16px;line-height:1.5}" +
             ".dcbt{flex-direction:column!important;padding:12px 16px;gap:8px}" +
             ".dcb:not(.dccv) .dcbt{flex-direction:column-reverse!important}" +
-            ".dcbt button{padding:12px 16px;font-size:14px;width:100%}" +
+            ".dcbt button{padding:12px 16px!important;font-size:14px!important;width:100%!important}" +
             ".dccts{padding:0 16px 12px}" +
             ".dcct{padding:12px;flex-direction:column;align-items:stretch}" +
             ".dcci{padding-right:0;padding-bottom:8px}" +
@@ -386,22 +396,22 @@
     function createCategoryToggle(id, title, description, checked, disabled) {
         var container = document.createElement("div");
         container.className = "dcct";
-        
+
         var info = document.createElement("div");
         info.className = "dcci";
-        
+
         var titleEl = document.createElement("div");
         titleEl.className = "dcctt";
         titleEl.textContent = title;
         info.appendChild(titleEl);
-        
+
         var descEl = document.createElement("div");
         descEl.className = "dccd";
         descEl.textContent = description;
         info.appendChild(descEl);
-        
+
         container.appendChild(info);
-        
+
         var toggle = document.createElement("input");
         toggle.type = "checkbox";
         toggle.className = "dci";
@@ -412,7 +422,7 @@
             if (id === "a") state.ac = toggle.checked ? 1 : 0;
             else if (id === "m") state.mc = toggle.checked ? 1 : 0;
         };
-        
+
         container.appendChild(toggle);
         return container;
     }
@@ -420,13 +430,13 @@
     function createBanner() {
         // Remove existing wrapper if any
         if (state.wr) state.wr.remove();
-        
+
         injectStyles();
-        
+
         // Create fixed wrapper - this covers the entire viewport
         var wrapper = document.createElement("div");
         wrapper.className = "dcw";
-        
+
         // Overlay inside wrapper
         var overlay = document.createElement("div");
         overlay.className = "dco" + (config.so ? "" : " dch");
@@ -434,94 +444,95 @@
             if (state.rv) hideBanner();
         };
         wrapper.appendChild(overlay);
-        
+
         // Banner - mobile always uses center position
         var mobile = isMobile();
         var posClass = mobile ? "dcp-center" : "dcp-" + config.bp;
         var banner = document.createElement("div");
         banner.className = "dcb " + posClass + (state.v === "c" ? " dccv" : "");
-        
+
         // Title
         var title = document.createElement("div");
         title.className = "dct";
         title.textContent = t("t");
         banner.appendChild(title);
-        
+
         // Scrollable content wrapper
         var scrollContent = document.createElement("div");
         scrollContent.className = "dcsc";
-        
+
         // Description
         var desc = document.createElement("p");
         desc.className = "dctx";
-        desc.innerHTML = t("d");
+        var descKey = config.opp ? "d" : "d2";
+        desc.innerHTML = t(descKey).replace("{PP_URL}", getPrivacyPolicyUrl());
         scrollContent.appendChild(desc);
-        
+
         var primaryClass = config.pb || "dcpb";
         var secondaryClass = config.sb || "dcsb";
-        
+
         if (state.v === "i") {
             // Initial view
             banner.appendChild(scrollContent);
-            
+
             var buttons = document.createElement("div");
             buttons.className = "dcbt";
-            
+
             var acceptBtn = document.createElement("button");
             acceptBtn.className = primaryClass;
             acceptBtn.textContent = t("aa");
             acceptBtn.onclick = handleAcceptAll;
             buttons.appendChild(acceptBtn);
-            
+
             var customizeBtn = document.createElement("button");
             customizeBtn.className = secondaryClass;
             customizeBtn.textContent = t("c");
             customizeBtn.onclick = handleCustomize;
             buttons.appendChild(customizeBtn);
-            
+
             banner.appendChild(buttons);
+
+            // Footer branding - only in initial view (Free version)
+            var footer = document.createElement("div");
+            footer.className = "dcf";
+            footer.innerHTML = '<span style="opacity:0.6">Free CMP by DataCrew</span>';
+            banner.appendChild(footer);
         } else {
             // Customize view - categories in scrollable area
             var categories = document.createElement("div");
             categories.className = "dccts";
-            
+
             categories.appendChild(createCategoryToggle("n", t("n"), t("nd"), 1, 1));
             categories.appendChild(createCategoryToggle("a", t("a"), t("ad"), state.ac, 0));
             categories.appendChild(createCategoryToggle("m", t("m"), t("md"), state.mc, 0));
-            
+
             scrollContent.appendChild(categories);
             banner.appendChild(scrollContent);
-            
+
             var buttons = document.createElement("div");
             buttons.className = "dcbt";
-            
+
             var acceptBtn = document.createElement("button");
             acceptBtn.className = primaryClass;
             acceptBtn.textContent = t("aa");
             acceptBtn.onclick = handleAcceptAllCustomize;
             buttons.appendChild(acceptBtn);
-            
+
             var saveBtn = document.createElement("button");
             saveBtn.className = secondaryClass;
             saveBtn.textContent = t("os");
             saveBtn.onclick = handleSaveSelected;
             buttons.appendChild(saveBtn);
-            
+
             var rejectBtn = document.createElement("button");
             rejectBtn.className = secondaryClass;
             rejectBtn.textContent = t("ra");
             rejectBtn.onclick = handleRejectAll;
             buttons.appendChild(rejectBtn);
-            
+
             banner.appendChild(buttons);
         }
-        
-        // Footer
-        var footer = document.createElement("div");
-        footer.className = "dcf";
-        footer.innerHTML = '<a href="https://github.com/DataCrew-Agency/datacrew-cmp" target="_blank">Free CMP by DataCrew</a>';
-        banner.appendChild(footer);
-        
+
         wrapper.appendChild(banner);
         document.body.appendChild(wrapper);
 
@@ -544,12 +555,12 @@
     function handleAcceptAllCustomize() {
         state.ac = 1;
         state.mc = 1;
-        
+
         var analyticsToggle = document.getElementById("dci-a");
         var marketingToggle = document.getElementById("dci-m");
         if (analyticsToggle) analyticsToggle.checked = true;
         if (marketingToggle) marketingToggle.checked = true;
-        
+
         setTimeout(function() {
             saveConsent({ n: 1, a: 1, m: 1 });
             hideBanner();
@@ -594,7 +605,7 @@
         show: function(forceCustomize) {
             state.rv = 1;
             state.v = forceCustomize ? "c" : "i";
-            
+
             var existing = getConsentPreferences();
             if (existing) {
                 state.ac = existing.analytics_storage === "granted" ? 1 : 0;
@@ -603,7 +614,7 @@
                 state.ac = 0;
                 state.mc = 0;
             }
-            
+
             createBanner();
         },
 
@@ -622,21 +633,14 @@
 
         hasConsent: hasConsent,
 
-        setLanguage: function(lang) {
-            if (lang === "hu" || lang === "en") {
-                state.l = lang;
-                if (state.be) createBanner();
-            }
-        },
-
         getLanguage: function() {
-            return state.l;
+            return "hu";
         },
 
         revisitConsent: function() {
             state.rv = 1;
             state.v = "c";
-            
+
             var existing = getConsentPreferences();
             if (existing) {
                 state.ac = existing.analytics_storage === "granted" ? 1 : 0;
@@ -645,7 +649,7 @@
                 state.ac = 0;
                 state.mc = 0;
             }
-            
+
             createBanner();
         }
     };
