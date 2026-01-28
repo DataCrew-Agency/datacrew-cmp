@@ -495,7 +495,7 @@
             // Footer branding - only in initial view (Free version)
             var footer = document.createElement("div");
             footer.className = "dcf";
-            footer.innerHTML = '<span style="opacity:0.6">Free CMP by DataCrew</span>';
+            footer.innerHTML = '<a href="https://github.com/DataCrew-Agency/datacrew-cmp" target="_blank" rel="noopener noreferrer" style="opacity:0.6">Free CMP by DataCrew</a>';
             banner.appendChild(footer);
         } else {
             // Customize view - categories in scrollable area
