@@ -1,0 +1,151 @@
+<!--
+  DataCrew CMP - Önálló (GTM nélküli) telepítő snippet
+  https://github.com/DataCrew-Agency/datacrew-cmp
+
+  Ez a snippet ugyanazt csinálja, mint a template.tpl GTM tag: beállítja a
+  Google Consent Mode v2 alapértelmezett állapotát, majd betölti a banner
+  scriptet a CDN-ről.
+
+  HOVÁ ILLESSZÜK (WordPress, GTM nélkül):
+  - A <head> elejére, MINÉL KORÁBBAN - mindenképp a GA4/gtag.js, Google Ads,
+    Meta Pixel stb. scriptek ELŐTT, mert a consent alapértelmezett értékét
+    ezeknek a scripteknek ismerniük kell induláskor.
+  - Gyakorlatilag: illeszd be a téma header.php-jába a wp_head() elé, vagy
+    használj egy "Insert Headers and Footers" / WPCode típusú bővítményt,
+    és válaszd a "Header" beillesztési helyet "magas prioritással" (minél
+    előrébb fusson le).
+-->
+<script>
+(function () {
+  // ===================================================================
+  // BEÁLLÍTÁSOK - ezeket módosítsd a template.tpl paramétereinek megfelelően
+  // ===================================================================
+  var config = {
+    // --- Megjelenés ---
+    colorMode: 'gradient',        // 'solid' vagy 'gradient'
+    primaryColor: '#FA4716',
+    secondaryColor: '#FA6212',    // csak 'gradient' módban számít
+    bannerPosition: 'center',     // 'center' | 'bottom' | 'bottomleft' (asztali nézet)
+    showOverlay: true,
+
+    // --- Gomb stílusok (üresen hagyva az alapértelmezett CMP stílust használja) ---
+    primaryButtonClass: '',
+    secondaryButtonClass: '',
+
+    // --- Cookie beállítások ---
+    cookieDomain: '',             // pl. '.pelda.hu' az összes aldoménhoz, üresen a jelenlegi domain
+    cookieExpiryDays: 365,
+
+    // --- Adatvédelmi tájékoztató link ---
+    showOwnPrivacyPolicy: true,
+    privacyPolicyUrlDefault: '/adatvedelmi-tajekoztato/',
+    privacyPolicyUrlHu: '',       // ha üres, a fenti alapértelmezett URL-t használja
+
+    // --- Alapértelmezett consent állapot (Google Consent Mode v2) ---
+    defaultAdStorage: 'denied',
+    defaultAdUserData: 'denied',
+    defaultAdPersonalization: 'denied',
+    defaultAnalyticsStorage: 'denied',
+    waitForUpdate: true,
+    waitForUpdateMs: 500,
+
+    // --- DataLayer események ---
+    enableConsentUpdateEvent: true,
+    enableFirstConsentEvent: false,
+
+    // --- Cross-domain consent megosztás ---
+    enableCrossDomain: false,
+    crossDomainHosts: '',         // pl. 'shop.pelda.hu, blog.pelda.hu'
+
+    // --- Egyéb ---
+    globalObjectName: 'DataCrewConsent',
+    adsDataRedaction: 'notset',   // 'notset' | 'true' | 'false'
+    urlPassthrough: 'notset'      // 'notset' | 'true' | 'false'
+  };
+  // ===================================================================
+  // BEÁLLÍTÁSOK VÉGE - az alábbi részt nem kell módosítani
+  // ===================================================================
+
+  // 1) dataLayer + gtag shim (nem írja felül, ha GA4/gtag.js már definiálta)
+  window.dataLayer = window.dataLayer || [];
+  function gtag() { window.dataLayer.push(arguments); }
+  window.gtag = window.gtag || gtag;
+
+  // 2) Alapértelmezett consent állapot beállítása - ennek MINDEN más
+  // marketing/analitika scriptet meg kell előznie az oldalon
+  var defaultConsent = {
+    ad_storage: config.defaultAdStorage,
+    ad_user_data: config.defaultAdUserData,
+    ad_personalization: config.defaultAdPersonalization,
+    analytics_storage: config.defaultAnalyticsStorage
+  };
+  if (config.waitForUpdate) {
+    defaultConsent.wait_for_update = config.waitForUpdateMs;
+  }
+  gtag('consent', 'default', defaultConsent);
+
+  if (config.adsDataRedaction !== 'notset') {
+    gtag('set', 'ads_data_redaction', config.adsDataRedaction === 'true');
+  }
+  if (config.urlPassthrough !== 'notset') {
+    gtag('set', 'url_passthrough', config.urlPassthrough === 'true');
+  }
+
+  // 3) Ha a látogatónak már van mentett döntése, azonnal frissítjük a consentet
+  function dcGetCookie(name) {
+    var value = '; ' + document.cookie;
+    var parts = value.split('; ' + name + '=');
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+  }
+
+  var existingCookie = dcGetCookie('datacrew-consent');
+  if (existingCookie) {
+    try {
+      var decoded = decodeURIComponent(existingCookie);
+      var hasMarketing = decoded.indexOf('marketing') > -1;
+      var hasStatistics = decoded.indexOf('statistics') > -1;
+      gtag('consent', 'update', {
+        ad_storage: hasMarketing ? 'granted' : 'denied',
+        ad_user_data: hasMarketing ? 'granted' : 'denied',
+        ad_personalization: hasMarketing ? 'granted' : 'denied',
+        analytics_storage: hasStatistics ? 'granted' : 'denied'
+      });
+    } catch (e) {}
+  }
+
+  // 4) Banner konfiguráció összeállítása (megegyezik a GTM sablon logikájával)
+  var colorStyle = config.colorMode === 'gradient'
+    ? 'linear-gradient(135deg, ' + config.primaryColor + ' 0%, ' + config.secondaryColor + ' 100%)'
+    : config.primaryColor;
+
+  window.__dcCmpConfig = {
+    cd: config.cookieDomain,
+    ce: config.cookieExpiryDays,
+    ppDf: config.privacyPolicyUrlDefault,
+    ppHu: config.privacyPolicyUrlHu,
+    opp: config.showOwnPrivacyPolicy ? 1 : 0,
+    cs: colorStyle,
+    pc: config.primaryColor,
+    bp: config.bannerPosition,
+    so: config.showOverlay ? 1 : 0,
+    pb: config.primaryButtonClass,
+    sb: config.secondaryButtonClass,
+    lm: 'hu',
+    go: config.globalObjectName,
+    adr: config.adsDataRedaction,
+    up: config.urlPassthrough,
+    fcu: config.enableFirstConsentEvent,
+    ccu: config.enableConsentUpdateEvent,
+    xd: config.enableCrossDomain ? 1 : 0,
+    xdh: config.crossDomainHosts,
+    int: 'none'
+  };
+
+  // 5) Banner script betöltése a CDN-ről
+  var dcScript = document.createElement('script');
+  dcScript.src = 'https://cdn.datacrew.agency/consent-bar-free.min.js';
+  dcScript.async = true;
+  document.head.appendChild(dcScript);
+})();
+</script>
