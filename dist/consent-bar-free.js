@@ -152,14 +152,24 @@
     // inside the visual viewport instead.
 
     var vvListener = null;
+    var vvTimer = null;
     var vvRaf = false;
     var vvFitted = false;
 
     function needsVvFit() {
         var vv = window.visualViewport;
         if (!vv) return false;
-        var icb = document.documentElement.clientWidth;
-        return (icb - vv.width > 2) || vv.offsetLeft > 1 || vv.offsetTop > 1;
+        var de = document.documentElement;
+        // Expanded ICB or pinch zoom
+        if (de.clientWidth - vv.width > 2) return true;
+        // Panned visual viewport
+        if (vv.offsetLeft > 1 || vv.offsetTop > 1) return true;
+        // Content overflows the visual viewport on a touch/mobile device: Android
+        // expands the fixed-position viewport to the content width without
+        // reflecting it in clientWidth, so detect it from the content size itself
+        var cw = Math.max(de.scrollWidth, document.body ? document.body.scrollWidth : 0);
+        if (cw - vv.width > 24 && (isMobile() || navigator.maxTouchPoints > 0)) return true;
+        return false;
     }
 
     function fitBanner() {
@@ -206,6 +216,9 @@
             window.visualViewport.addEventListener("scroll", vvListener);
         }
         window.addEventListener("resize", vvListener);
+        // The fixed-viewport expansion happens without firing any event (e.g. when
+        // overflowing content renders after the banner), so poll while visible
+        vvTimer = setInterval(vvListener, 500);
     }
 
     function unwatchViewport() {
@@ -215,6 +228,10 @@
             window.visualViewport.removeEventListener("scroll", vvListener);
         }
         window.removeEventListener("resize", vvListener);
+        if (vvTimer) {
+            clearInterval(vvTimer);
+            vvTimer = null;
+        }
         vvListener = null;
         vvFitted = false;
     }
