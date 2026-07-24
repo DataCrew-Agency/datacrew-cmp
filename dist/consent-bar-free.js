@@ -136,7 +136,87 @@
     }
 
     function isMobile() {
+        // matchMedia uses the device-width based media query viewport, which stays
+        // reliable even when overflowing content expands the layout viewport
+        if (window.matchMedia && window.matchMedia("(max-width: 600px)").matches) return true;
         return window.innerWidth <= 600;
+    }
+
+    // ===========================================
+    // VISUAL VIEWPORT FIT
+    // ===========================================
+    // If site content overflows the viewport horizontally, mobile browsers expand
+    // the layout viewport to the content width. Fixed-position percentages then
+    // resolve against that wider box, pushing the banner (partly) off-screen.
+    // When this (or pinch-zoom) is detected, position the banner explicitly
+    // inside the visual viewport instead.
+
+    var vvListener = null;
+    var vvRaf = false;
+    var vvFitted = false;
+
+    function needsVvFit() {
+        var vv = window.visualViewport;
+        if (!vv) return false;
+        var icb = document.documentElement.clientWidth;
+        return (icb - vv.width > 2) || vv.offsetLeft > 1 || vv.offsetTop > 1;
+    }
+
+    function fitBanner() {
+        var b = state.be;
+        if (!b) return;
+        var vv = window.visualViewport;
+        if (!vv || !needsVvFit()) {
+            if (vvFitted) {
+                ["width", "max-width", "left", "right", "top", "bottom", "transform", "max-height", "border-radius"].forEach(function(p) {
+                    b.style.removeProperty(p);
+                });
+                vvFitted = false;
+            }
+            return;
+        }
+        vvFitted = true;
+        var maxW = state.v === "c" ? 640 : 560;
+        if (isMobile()) maxW = 360;
+        var bw = Math.min(maxW, vv.width - 32);
+        var s = b.style;
+        s.setProperty("width", bw + "px", "important");
+        s.setProperty("max-width", bw + "px", "important");
+        s.setProperty("left", (vv.offsetLeft + (vv.width - bw) / 2) + "px", "important");
+        s.setProperty("right", "auto", "important");
+        s.setProperty("top", (vv.offsetTop + vv.height / 2) + "px", "important");
+        s.setProperty("bottom", "auto", "important");
+        s.setProperty("transform", "translateY(-50%)", "important");
+        s.setProperty("max-height", Math.round(vv.height * 0.9) + "px", "important");
+        s.setProperty("border-radius", "16px", "important");
+    }
+
+    function watchViewport() {
+        if (vvListener) return;
+        vvListener = function() {
+            if (vvRaf) return;
+            vvRaf = true;
+            requestAnimationFrame(function() {
+                vvRaf = false;
+                fitBanner();
+            });
+        };
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener("resize", vvListener);
+            window.visualViewport.addEventListener("scroll", vvListener);
+        }
+        window.addEventListener("resize", vvListener);
+    }
+
+    function unwatchViewport() {
+        if (!vvListener) return;
+        if (window.visualViewport) {
+            window.visualViewport.removeEventListener("resize", vvListener);
+            window.visualViewport.removeEventListener("scroll", vvListener);
+        }
+        window.removeEventListener("resize", vvListener);
+        vvListener = null;
+        vvFitted = false;
     }
 
     // ===========================================
@@ -351,7 +431,7 @@
 
             // Buttons - fixed at bottom
             ".dcbt{display:flex;justify-content:center;gap:8px;padding:12px 16px;flex-wrap:wrap;flex-shrink:0;background:#fff}" +
-            ".dcbt button{border:none!important;padding:10px 18px!important;font-size:13px!important;cursor:pointer!important;border-radius:6px!important;font-weight:600!important}" +
+            ".dcbt button{-webkit-appearance:none!important;appearance:none!important;border:none!important;margin:0!important;padding:10px 18px!important;font-size:13px!important;font-family:system-ui,sans-serif!important;line-height:1.4!important;letter-spacing:normal!important;text-transform:none!important;text-decoration:none!important;text-align:center!important;white-space:normal!important;box-shadow:none!important;min-width:0!important;min-height:0!important;width:auto!important;height:auto!important;box-sizing:border-box!important;cursor:pointer!important;border-radius:6px!important;font-weight:600!important}" +
             ".dcbt button.dcpb{background:" + config.cs + "!important;color:#fff!important}" +
             ".dcbt button.dcsb{background:#f3f4f6!important;color:#374151!important;border:1px solid #d1d5db!important}" +
 
@@ -539,6 +619,9 @@
         state.wr = wrapper;
         state.oe = overlay;
         state.be = banner;
+
+        fitBanner();
+        watchViewport();
     }
 
     // ===========================================
@@ -586,6 +669,7 @@
 
     function hideBanner() {
         state.v = "i";
+        unwatchViewport();
         if (state.be) {
             state.be.remove();
         }
