@@ -768,7 +768,12 @@
             applyCrossDomainConsent(cdConsent);
         } else if (!hasConsent()) {
             state.rv = 0;
-            createBanner();
+            // Async GTM injection can run this while the parser is still in <head>
+            if (document.body) {
+                createBanner();
+            } else {
+                document.addEventListener("DOMContentLoaded", createBanner);
+            }
         } else {
             var existing = getConsentPreferences();
             if (existing) {
